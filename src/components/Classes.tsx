@@ -13,7 +13,7 @@ const Classes = () => {
     {
       name: 'Premium Membership',
       description: 'Everything in Standard plus exclusive access to wellness facilities.',
-      features: ['All Muay Thai classes', 'Beginner to Advanced levels', 'Sparring sessions', 'Equipment access', 'Sauna access', 'Cold plunge therapy', 'Priority booking'],
+      features: ['All Muay Thai classes', 'Beginner to Advanced levels', 'Sparring sessions', 'Equipment access', 'Sauna access', 'Cold plunge therapy'],
       schedule: 'All scheduled classes + Wellness',
       price: '€90/month'
     }
