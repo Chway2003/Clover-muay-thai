@@ -12,6 +12,48 @@ const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
+  // Structured data for business location
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Clover Muay Thai",
+    "description": "Professional Muay Thai training facility in Dublin",
+    "url": "https://clovermuaythai.com",
+    "telephone": "+353 83 372 6141",
+    "email": "clovermuaythai@gmail.com",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "14 Miltown Road",
+      "addressLocality": "Dublin",
+      "postalCode": "D06 AK57",
+      "addressCountry": "IE"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 53.3225,
+      "longitude": -6.2675
+    },
+    "openingHours": [
+      "Mo-Th 18:30-21:30",
+      "Fr 18:30-20:00"
+    ],
+    "sameAs": [
+      "https://instagram.com/clover_muaythai"
+    ]
+  };
+
+  // Inject structured data into page head
+  React.useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify(structuredData);
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
@@ -292,9 +334,25 @@ const Contact = () => {
          <div className="mt-20">
            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
              <h3 className="text-2xl font-bold text-white mb-6 text-center">Find Us</h3>
+             
+             {/* Location Link */}
+             <div className="text-center mb-6">
+               <a
+                 href="https://maps.google.com/?q=14+Miltown+Road+Dublin+6+D06+AK57+Ireland"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="inline-flex items-center space-x-3 bg-clover-gold text-clover-green px-6 py-3 rounded-xl font-semibold hover:bg-yellow-400 transition-all duration-300 transform hover:scale-105"
+               >
+                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                 </svg>
+                 <span>📍 14 Miltown Road, Dublin 6 D06 AK57</span>
+               </a>
+             </div>
+             
              <div className="aspect-video rounded-2xl overflow-hidden">
                <iframe
-                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2381.5!2d-6.2675!3d53.3225!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTPCsDE5JzIxLjAiTiA2wrAxNicwMy4wIlc!5e0!3m2!1sen!2sie!4v1234567890"
+                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2381.5!2d-6.2675!3d53.3225!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x48670e80ea27ac2f%3A0xa00c7a997309672!2s14+Miltown+Rd%2C+Dublin+6%2C+D06+AK57%2C+Ireland!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
                  width="100%"
                  height="100%"
                  style={{ border: 0 }}

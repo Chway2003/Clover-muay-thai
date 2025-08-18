@@ -17,17 +17,17 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: 'Clover Muay Thai - Master the Art of Muay Thai',
-  description: 'Join Clover Muay Thai for professional training in authentic Muay Thai. From beginners to advanced fighters, discover your potential in our supportive environment.',
+  description: 'Join Clover Muay Thai for professional training in authentic Muay Thai at 14 Miltown Road, Dublin 6 D06 AK57. From beginners to advanced fighters, discover your potential in our supportive environment.',
   keywords: 'Muay Thai, martial arts, training, fitness, self-defense, Clover Muay Thai, boxing, kickboxing, martial arts gym',
   authors: [{ name: 'Clover Muay Thai' }],
-  metadataBase: new URL('https://mydomain.com'),
+  metadataBase: new URL('https://clovermuaythai.com'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'Clover Muay Thai - Master the Art of Muay Thai',
     description: 'Professional Muay Thai training in a supportive environment',
-    url: 'https://mydomain.com',
+    url: 'https://clovermuaythai.com',
     siteName: 'Clover Muay Thai',
     type: 'website',
     locale: 'en_US',
