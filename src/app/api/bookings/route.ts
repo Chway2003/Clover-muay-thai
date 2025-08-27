@@ -151,13 +151,20 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error creating booking:', error);
+    
+    // Type-safe error handling
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
+    const errorName = error instanceof Error ? error.name : 'Unknown error type';
+    
     console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
+      message: errorMessage,
+      stack: errorStack,
+      name: errorName
     });
+    
     return NextResponse.json(
-      { error: `Failed to create booking: ${error.message}` },
+      { error: `Failed to create booking: ${errorMessage}` },
       { status: 500 }
     );
   }
@@ -197,8 +204,12 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error('Error cancelling booking:', error);
+    
+    // Type-safe error handling
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
     return NextResponse.json(
-      { error: 'Failed to cancel booking' },
+      { error: `Failed to cancel booking: ${errorMessage}` },
       { status: 500 }
     );
   }

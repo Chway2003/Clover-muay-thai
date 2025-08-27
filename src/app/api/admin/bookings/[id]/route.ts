@@ -82,8 +82,12 @@ export async function DELETE(
 
   } catch (error) {
     console.error('Error cancelling admin booking:', error);
+    
+    // Type-safe error handling
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
     return NextResponse.json(
-      { error: 'Failed to cancel booking' },
+      { error: `Failed to cancel booking: ${errorMessage}` },
       { status: 500 }
     );
   }

@@ -144,8 +144,12 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('Error fetching admin classes:', error);
+    
+    // Type-safe error handling
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
     return NextResponse.json(
-      { error: 'Failed to fetch classes' },
+      { error: `Failed to fetch classes: ${errorMessage}` },
       { status: 500 }
     );
   }
@@ -203,8 +207,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error adding class:', error);
+    
+    // Type-safe error handling
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
     return NextResponse.json(
-      { error: 'Failed to add class' },
+      { error: `Failed to add class: ${errorMessage}` },
       { status: 500 }
     );
   }
@@ -254,8 +262,12 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error('Error removing class:', error);
+    
+    // Type-safe error handling
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
     return NextResponse.json(
-      { error: 'Failed to remove class' },
+      { error: `Failed to remove class: ${errorMessage}` },
       { status: 500 }
     );
   }
