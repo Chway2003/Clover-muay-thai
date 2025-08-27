@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1755816574338",
+    "email": "test@test.com",
+    "name": "Test User",
+    "password": "$2b$12$jsg2ln9a3Hbmt0ZqkVhlNOA0e2yphx2COsH6BAbTzoSxGbg19kOV.",
+    "createdAt": "2025-08-21T22:49:34.338Z",
+    "isAdmin": false
+  },
+  {
+    "id": "1756320631381",
+    "email": "clovermuaythai@gmail.com",
+    "name": "abdul choual",
+    "password": "$2b$12$tQ3428O6S.53gK17SpPrwerMuzZDxF3g3YSEw.xbJ35wkKwuaqEF.",
+    "createdAt": "2025-08-27T18:50:31.381Z",
+    "isAdmin": true
+  },
+  {
+    "id": "1756323436829",
+    "email": "achoual37@gmail.com",
+    "name": "abdul",
+    "password": "$2b$12$RZPEM.hGWiGSfZEiS14a9OZl6r/qfljVjxpax2wLHonwfr0s89egy",
+    "createdAt": "2025-08-27T19:37:16.829Z",
+    "isAdmin": false
+  }
+]

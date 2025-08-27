@@ -2,10 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -80,11 +84,47 @@ const Header = () => {
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-clover-gold transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link
-              href="/contact"
-              className="bg-clover-gold text-clover-green px-4 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-all duration-300 transform hover:scale-105 shadow-lg"
+              href="/booking"
+              className="text-white hover:text-clover-gold transition-colors duration-200 font-medium text-sm relative group"
             >
-              Join Now
+              Booking
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-clover-gold transition-all duration-300 group-hover:w-full"></span>
             </Link>
+            {user?.isAdmin && (
+              <Link
+                href="/admin"
+                className="text-white hover:text-clover-gold transition-colors duration-200 font-medium text-sm relative group"
+              >
+                Admin
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-clover-gold transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            )}
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-white text-sm">Welcome, {user.name}</span>
+                <button
+                  onClick={logout}
+                  className="text-white hover:text-clover-gold transition-colors duration-200 font-medium text-sm"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link
+                  href="/auth/login"
+                  className="text-white hover:text-clover-gold transition-colors duration-200 font-medium text-sm"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth/register"
+                  className="bg-clover-gold text-clover-green px-4 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                >
+                  Join Now
+                </Link>
+              </div>
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -161,17 +201,61 @@ const Header = () => {
               Contact
             </Link>
             <Link
-              href="/contact"
-              className="block w-full text-center bg-clover-gold text-clover-green py-3 px-4 rounded-lg font-semibold hover:bg-yellow-400 transition-all duration-300 mt-4"
+              href="/booking"
+              className="block w-full text-left text-white hover:text-clover-gold transition-colors duration-200 font-medium py-3 px-4 hover:bg-white/5 rounded-lg"
               onClick={closeMobileMenu}
             >
-              Join Now
+              Booking
             </Link>
+            {user?.isAdmin && (
+              <Link
+                href="/admin"
+                className="block w-full text-left text-white hover:text-clover-gold transition-colors duration-200 font-medium py-3 px-4 hover:bg-white/5 rounded-lg"
+                onClick={closeMobileMenu}
+              >
+                Admin
+              </Link>
+            )}
+            {user ? (
+              <div className="space-y-2">
+                <div className="text-center text-white text-sm py-2">
+                  Welcome, {user.name}
+                </div>
+                <button
+                  onClick={() => {
+                    logout();
+                    closeMobileMenu();
+                  }}
+                  className="block w-full text-center text-white hover:text-clover-gold transition-colors duration-200 font-medium py-3 px-4 hover:bg-white/5 rounded-lg"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Link
+                  href="/auth/login"
+                  onClick={closeMobileMenu}
+                  className="block w-full text-center text-white hover:text-clover-gold transition-colors duration-200 font-medium py-3 px-4 hover:bg-white/5 rounded-lg"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth/register"
+                  onClick={closeMobileMenu}
+                  className="block w-full text-center bg-clover-gold text-clover-green py-3 px-4 rounded-lg font-semibold hover:bg-yellow-400 transition-all duration-300"
+                >
+                  Join Now
+                </Link>
+              </div>
+            )}
           </div>
         </div>
+
       </div>
     </header>
   );
 };
 
 export default Header;
+
