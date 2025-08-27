@@ -4,7 +4,7 @@
 The admin system provides administrative users with the ability to manage classes, view bookings, and control the gym's schedule.
 
 ## Admin Access
-- **Default Admin User:** `clovermuaythai@gmail.com` (password: same as before)
+- **Default Admin User:** `clovermuaythai@gmail.com` (name: admin, password: same as before)
 - **Admin Field:** Users have an `isAdmin` boolean field (default: `false`)
 - **Access Control:** Only users with `isAdmin: true` can access `/admin`
 
