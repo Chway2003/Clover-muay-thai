@@ -62,8 +62,11 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const { userId, userName, classId, date } = await request.json();
+    
+    console.log('Booking request received:', { userId, userName, classId, date });
 
     if (!userId || !userName || !classId || !date) {
+      console.log('Missing required fields:', { userId, userName, classId, date });
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -75,6 +78,10 @@ export async function POST(request: NextRequest) {
     
     // Find the class
     const classItem = timetable.find((c: any) => c.id === classId);
+    console.log('Looking for class with ID:', classId);
+    console.log('Available classes:', timetable.map(c => ({ id: c.id, day: c.day, time: c.time })));
+    console.log('Found class:', classItem);
+    
     if (!classItem) {
       return NextResponse.json(
         { error: 'Class not found' },
@@ -83,11 +90,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already booked this class
+    console.log('Checking for existing bookings...');
+    console.log('Current user ID:', userId);
+    console.log('Selected date:', date);
+    console.log('Selected date object:', new Date(date));
+    console.log('Selected date string:', new Date(date).toDateString());
+    
     const existingBooking = bookings.find((booking: any) => 
       booking.userId === userId && 
       booking.classId === classId && 
       new Date(booking.date).toDateString() === new Date(date).toDateString()
     );
+    
+    console.log('Existing booking found:', existingBooking);
 
     if (existingBooking) {
       return NextResponse.json(
@@ -124,8 +139,13 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString()
     };
 
+    console.log('Creating new booking:', newBooking);
+    console.log('Current bookings count:', bookings.length);
+
     bookings.push(newBooking);
     writeBookings(bookings);
+    
+    console.log('Booking saved successfully. New count:', bookings.length);
 
     return NextResponse.json({
       message: 'Booking successful',

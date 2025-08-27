@@ -56,7 +56,8 @@ export async function POST(request: NextRequest) {
       { 
         userId: user.id, 
         email: user.email,
-        name: user.name 
+        name: user.name,
+        isAdmin: user.isAdmin
       },
       JWT_SECRET,
       { expiresIn: '7d' }

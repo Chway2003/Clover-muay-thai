@@ -108,6 +108,8 @@ export default function BookingPage() {
     }
 
     try {
+      console.log('Attempting to book class:', { classId, selectedDate, user: user?.id, userName: user?.name });
+      
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: {
@@ -122,6 +124,7 @@ export default function BookingPage() {
       });
 
       const data = await response.json();
+      console.log('Booking response:', { status: response.status, data });
 
       if (response.ok) {
         setBookingStatus({
