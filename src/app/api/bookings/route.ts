@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     // Find the class
     const classItem = timetable.find((c: any) => c.id === classId);
     console.log('Looking for class with ID:', classId);
-    console.log('Available classes:', timetable.map(c => ({ id: c.id, day: c.day, time: c.time })));
+    console.log('Available classes:', timetable.map((c: any) => ({ id: c.id, day: c.day, time: c.time })));
     console.log('Found class:', classItem);
     
     if (!classItem) {
