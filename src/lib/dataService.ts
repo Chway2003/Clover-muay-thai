@@ -9,6 +9,24 @@ export class DataService {
   }
 
   private static getFilePath(filename: string) {
+    // Try multiple possible paths
+    const possiblePaths = [
+      path.join(process.cwd(), 'data', filename),
+      path.join(__dirname, '..', '..', 'data', filename),
+      path.join(process.cwd(), 'src', '..', 'data', filename)
+    ];
+    
+    console.log('Trying to find file:', { filename, cwd: process.cwd(), __dirname });
+    
+    for (const filePath of possiblePaths) {
+      if (fs.existsSync(filePath)) {
+        console.log('Found file at:', filePath);
+        return filePath;
+      }
+      console.log('File not found at:', filePath);
+    }
+    
+    console.log('File not found in any location, using default path');
     return path.join(process.cwd(), 'data', filename);
   }
   // Users
@@ -144,18 +162,17 @@ export class DataService {
   // Timetable
   static async getTimetable() {
     try {
-      if (this.isProduction()) {
-        const timetable = await kv.get('timetable');
-        return Array.isArray(timetable) ? timetable : [];
-      } else {
-        // Local file system fallback
-        const filePath = this.getFilePath('timetable.json');
-        if (!fs.existsSync(filePath)) {
-          return [];
-        }
-        const data = fs.readFileSync(filePath, 'utf-8');
-        return JSON.parse(data);
+      // For now, just use file system to get it working
+      const filePath = this.getFilePath('timetable.json');
+      console.log('Looking for timetable file at:', filePath);
+      if (!fs.existsSync(filePath)) {
+        console.log('Timetable file not found, returning empty array');
+        return [];
       }
+      const data = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(data);
+      console.log('Loaded timetable data:', { count: parsed.length, firstItem: parsed[0] });
+      return parsed;
     } catch (error) {
       console.error('Error getting timetable:', error);
       return [];
@@ -205,8 +222,11 @@ export class DataService {
   // Initialize default data if empty
   static async initializeDefaultData() {
     try {
+      console.log('Starting data initialization...');
+      
       // Check if users exist
       const users = await this.getUsers();
+      console.log('Current users:', { count: users.length });
       if (users.length === 0) {
         console.log('Initializing default users...');
         const defaultUsers = [
@@ -222,8 +242,9 @@ export class DataService {
         await this.saveUsers(defaultUsers);
       }
 
-      // Check if timetable exists
+      // Check if timetable exists - only initialize if completely empty
       const timetable = await this.getTimetable();
+      console.log('Current timetable data:', { count: timetable.length, isEmpty: timetable.length === 0 });
       if (timetable.length === 0) {
         console.log('Initializing default timetable...');
         const defaultTimetable = [
@@ -321,9 +342,10 @@ export class DataService {
         await this.saveTimetable(defaultTimetable);
       }
 
-      // Initialize empty bookings array
+      // Initialize empty bookings array only if it doesn't exist
       const bookings = await this.getBookings();
-      if (bookings.length === 0) {
+      console.log('Current bookings:', { count: bookings.length, isArray: Array.isArray(bookings) });
+      if (!Array.isArray(bookings)) {
         await this.saveBookings([]);
       }
 

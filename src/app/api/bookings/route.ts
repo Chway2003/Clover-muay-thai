@@ -5,11 +5,19 @@ import { DataService } from '@/lib/dataService';
 
 export async function GET() {
   try {
+    console.log('GET /api/bookings called');
+    
     // Initialize default data if needed
     await DataService.initializeDefaultData();
     
     const bookings = await DataService.getBookings();
     const timetable = await DataService.getTimetable();
+    
+    console.log('Data loaded:', { 
+      bookingsCount: bookings.length, 
+      timetableCount: timetable.length,
+      timetableSample: timetable[0]
+    });
     
     // Ensure we have arrays
     if (!Array.isArray(timetable) || !Array.isArray(bookings)) {
@@ -33,6 +41,11 @@ export async function GET() {
         availableSpots: classItem.maxSpots - classBookings.length,
         isFull: classBookings.length >= classItem.maxSpots
       };
+    });
+
+    console.log('Classes with availability:', { 
+      count: classesWithAvailability.length,
+      sample: classesWithAvailability[0]
     });
 
     return NextResponse.json({
