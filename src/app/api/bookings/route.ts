@@ -1,37 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const bookingsFilePath = path.join(process.cwd(), 'data', 'bookings.json');
-const timetableFilePath = path.join(process.cwd(), 'data', 'timetable.json');
-
-// Helper function to read bookings
-const readBookings = () => {
-  if (!fs.existsSync(bookingsFilePath)) {
-    fs.writeFileSync(bookingsFilePath, '[]');
-    return [];
-  }
-  const data = fs.readFileSync(bookingsFilePath, 'utf-8');
-  return JSON.parse(data);
-};
-
-// Helper function to write bookings
-const writeBookings = (bookings: any[]) => {
-  fs.writeFileSync(bookingsFilePath, JSON.stringify(bookings, null, 2));
-};
+import { DataService } from '@/lib/dataService';
 
 
-
-// Helper function to read timetable
-const readTimetable = () => {
-  const data = fs.readFileSync(timetableFilePath, 'utf-8');
-  return JSON.parse(data);
-};
 
 export async function GET() {
   try {
-    const bookings = readBookings();
-    const timetable = readTimetable();
+    // Initialize default data if needed
+    await DataService.initializeDefaultData();
+    
+    const bookings = await DataService.getBookings();
+    const timetable = await DataService.getTimetable();
+    
+    // Ensure we have arrays
+    if (!Array.isArray(timetable) || !Array.isArray(bookings)) {
+      console.error('Invalid data structure:', { timetable, bookings });
+      return NextResponse.json(
+        { error: 'Invalid data structure' },
+        { status: 500 }
+      );
+    }
     
     // Calculate available spots for each class
     const classesWithAvailability = timetable.map((classItem: any) => {
@@ -82,8 +69,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bookings = readBookings();
-    const timetable = readTimetable();
+    const bookings = await DataService.getBookings();
+    const timetable = await DataService.getTimetable();
+    
+    // Ensure we have arrays
+    if (!Array.isArray(timetable) || !Array.isArray(bookings)) {
+      console.error('Invalid data structure:', { timetable, bookings });
+      return NextResponse.json(
+        { error: 'Invalid data structure' },
+        { status: 500 }
+      );
+    }
     
     // Find the class
     console.log('Looking for class with ID:', classId);
@@ -141,8 +137,7 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString()
     };
 
-    bookings.push(newBooking);
-    writeBookings(bookings);
+    await DataService.addBooking(newBooking);
 
     return NextResponse.json({
       message: 'Booking successful',
@@ -183,23 +178,17 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const bookings = readBookings();
-    const bookingIndex = bookings.findIndex((b: any) => b.id === bookingId && b.userId === userId);
+    const success = await DataService.removeBooking(bookingId, userId);
 
-    if (bookingIndex === -1) {
+    if (!success) {
       return NextResponse.json(
-        { error: 'Booking not found' },
-        { status: 404 }
+        { error: 'Failed to remove booking' },
+        { status: 500 }
       );
     }
 
-    // Remove the booking
-    const deletedBooking = bookings.splice(bookingIndex, 1)[0];
-    writeBookings(bookings);
-
     return NextResponse.json({
-      message: 'Booking cancelled successfully',
-      booking: deletedBooking
+      message: 'Booking cancelled successfully'
     });
 
   } catch (error) {
