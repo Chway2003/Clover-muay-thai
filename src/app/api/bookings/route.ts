@@ -20,6 +20,8 @@ const writeBookings = (bookings: any[]) => {
   fs.writeFileSync(bookingsFilePath, JSON.stringify(bookings, null, 2));
 };
 
+
+
 // Helper function to read timetable
 const readTimetable = () => {
   const data = fs.readFileSync(timetableFilePath, 'utf-8');
@@ -61,9 +63,16 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, userName, classId, date } = await request.json();
+    const body = await request.json();
+    console.log('Raw request body:', body);
     
-    console.log('Booking request received:', { userId, userName, classId, date });
+    // Handle both field name variations
+    const userId = body.userId || body.user;
+    const userName = body.userName;
+    const classId = body.classId;
+    const date = body.date || body.selectedDate;
+    
+    console.log('Parsed fields:', { userId, userName, classId, date });
 
     if (!userId || !userName || !classId || !date) {
       console.log('Missing required fields:', { userId, userName, classId, date });
@@ -77,9 +86,10 @@ export async function POST(request: NextRequest) {
     const timetable = readTimetable();
     
     // Find the class
-    const classItem = timetable.find((c: any) => c.id === classId);
     console.log('Looking for class with ID:', classId);
-    console.log('Available classes:', timetable.map((c: any) => ({ id: c.id, day: c.day, time: c.time })));
+    console.log('Available classes in timetable:', timetable.map((c: any) => ({ id: c.id, day: c.day, time: c.time })));
+    
+    const classItem = timetable.find((c: any) => c.id === classId);
     console.log('Found class:', classItem);
     
     if (!classItem) {
@@ -90,19 +100,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already booked this class
-    console.log('Checking for existing bookings...');
-    console.log('Current user ID:', userId);
-    console.log('Selected date:', date);
-    console.log('Selected date object:', new Date(date));
-    console.log('Selected date string:', new Date(date).toDateString());
-    
     const existingBooking = bookings.find((booking: any) => 
       booking.userId === userId && 
       booking.classId === classId && 
       new Date(booking.date).toDateString() === new Date(date).toDateString()
     );
-    
-    console.log('Existing booking found:', existingBooking);
 
     if (existingBooking) {
       return NextResponse.json(
@@ -139,13 +141,8 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString()
     };
 
-    console.log('Creating new booking:', newBooking);
-    console.log('Current bookings count:', bookings.length);
-
     bookings.push(newBooking);
     writeBookings(bookings);
-    
-    console.log('Booking saved successfully. New count:', bookings.length);
 
     return NextResponse.json({
       message: 'Booking successful',
@@ -154,8 +151,54 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error creating booking:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return NextResponse.json(
-      { error: 'Failed to create booking' },
+      { error: `Failed to create booking: ${error.message}` },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const bookingId = searchParams.get('id');
+    const userId = searchParams.get('userId');
+
+    if (!bookingId || !userId) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    const bookings = readBookings();
+    const bookingIndex = bookings.findIndex((b: any) => b.id === bookingId && b.userId === userId);
+
+    if (bookingIndex === -1) {
+      return NextResponse.json(
+        { error: 'Booking not found' },
+        { status: 404 }
+      );
+    }
+
+    // Remove the booking
+    const deletedBooking = bookings.splice(bookingIndex, 1)[0];
+    writeBookings(bookings);
+
+    return NextResponse.json({
+      message: 'Booking cancelled successfully',
+      booking: deletedBooking
+    });
+
+  } catch (error) {
+    console.error('Error cancelling booking:', error);
+    return NextResponse.json(
+      { error: 'Failed to cancel booking' },
       { status: 500 }
     );
   }

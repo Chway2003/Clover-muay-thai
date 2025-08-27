@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import jwt from 'jsonwebtoken';
 
 const timetableFilePath = path.join(process.cwd(), 'data', 'timetable.json');
 const bookingsFilePath = path.join(process.cwd(), 'data', 'bookings.json');
@@ -40,9 +41,13 @@ const checkAdminAccess = async (request: NextRequest) => {
   
   const token = authHeader.substring(7);
   try {
-    // For now, we'll do a simple check
-    // In a real app, you'd verify the JWT token and check admin status
-    return true;
+    // Verify JWT token and check admin status
+    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+    
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    
+    // Check if user has admin privileges
+    return decoded.isAdmin || false;
   } catch (error) {
     return false;
   }
@@ -52,6 +57,7 @@ export async function GET(request: NextRequest) {
   try {
     // Check admin access
     const isAdmin = await checkAdminAccess(request);
+    
     if (!isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -59,13 +65,19 @@ export async function GET(request: NextRequest) {
     const timetable = readTimetable();
     const bookings = readBookings();
     
+    console.log('Admin API: Timetable count:', timetable.length);
+    console.log('Admin API: Bookings count:', bookings.length);
+    console.log('Admin API: Sample booking:', bookings[0]);
+    
     // Get upcoming dates (next 30 days)
     const upcomingDates = [];
     const today = new Date();
+    
     for (let i = 0; i < 30; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      upcomingDates.push(date.toISOString().split('T')[0]);
+      const dateString = date.toISOString().split('T')[0];
+      upcomingDates.push(dateString);
     }
 
     // Create classes with booking information for each upcoming date
@@ -108,13 +120,16 @@ export async function GET(request: NextRequest) {
           bookings: classBookings.map((booking: any) => ({
             id: booking.id,
             userName: booking.userName,
-            userEmail: booking.email || 'N/A',
+            userEmail: `User ID: ${booking.userId}`,
             bookedAt: booking.createdAt
           }))
         });
       }
     }
 
+    console.log('Admin API: Classes with bookings count:', classesWithBookings.length);
+    console.log('Admin API: Sample class with bookings:', classesWithBookings[0]);
+    
     // Create response with cache control headers
     const response = NextResponse.json({
       classes: classesWithBookings,

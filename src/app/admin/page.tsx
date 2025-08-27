@@ -81,6 +81,7 @@ export default function AdminDashboard() {
   const loadAdminData = async () => {
     try {
       setIsLoadingData(true);
+      
       const response = await fetch('/api/admin/classes', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -89,7 +90,13 @@ export default function AdminDashboard() {
       
       if (response.ok) {
         const data = await response.json();
-        setClasses(data.classes);
+        
+        if (data.classes && Array.isArray(data.classes)) {
+          setClasses(data.classes);
+        } else {
+          setClasses([]);
+        }
+        
         setLastRefreshTime(new Date()); // Update last refresh time
         
         // Show refresh notification
@@ -237,11 +244,11 @@ export default function AdminDashboard() {
       
       <main className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {/* Page Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-white mb-4">Admin Dashboard</h1>
-            <p className="text-clover-gold text-lg">Manage classes and bookings</p>
-          </div>
+                     {/* Page Header */}
+           <div className="text-center mb-12">
+             <h1 className="text-4xl font-bold text-white mb-4">Admin Dashboard</h1>
+             <p className="text-clover-gold text-lg">Manage classes and bookings</p>
+           </div>
 
           {/* Status Message */}
           {statusMessage.type && (
@@ -261,15 +268,15 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* Add Class Button */}
-          <div className="mb-8">
-            <button
-              onClick={() => setShowAddClassForm(!showAddClassForm)}
-              className="bg-clover-gold text-clover-green px-6 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-colors"
-            >
-              {showAddClassForm ? 'Cancel' : 'Add New Class'}
-            </button>
-          </div>
+                     {/* Add Class Button */}
+           <div className="mb-8">
+             <button
+               onClick={() => setShowAddClassForm(!showAddClassForm)}
+               className="bg-clover-gold text-clover-green px-6 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-colors"
+             >
+               {showAddClassForm ? 'Cancel' : 'Add New Class'}
+             </button>
+           </div>
 
           {/* Add Class Form */}
           {showAddClassForm && (
@@ -375,95 +382,98 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* Classes Table */}
-          <div className="bg-white rounded-lg shadow-xl p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Upcoming Classes & Bookings</h2>
-              <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-500">
-                  Last updated: {lastRefreshTime.toLocaleTimeString()}
+                     {/* Classes Table */}
+           <div className="bg-white rounded-lg shadow-xl p-6">
+             <div className="flex justify-between items-center mb-6">
+               <h2 className="text-2xl font-bold text-gray-900">Upcoming Classes & Bookings</h2>
+               <div className="flex items-center space-x-4">
+                 <div className="text-sm text-gray-500">
+                   Last updated: {lastRefreshTime.toLocaleTimeString()}
+                 </div>
+                 <button
+                   onClick={loadAdminData}
+                   className="px-4 py-2 bg-clover-gold text-clover-green rounded-lg hover:bg-yellow-400 transition-colors text-sm"
+                 >
+                   Refresh Now
+                 </button>
+               </div>
+             </div>
+             
+                           {isLoadingData ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-500">Loading classes...</div>
                 </div>
-                <button
-                  onClick={loadAdminData}
-                  className="px-4 py-2 bg-clover-gold text-clover-green rounded-lg hover:bg-yellow-400 transition-colors text-sm"
-                >
-                  Refresh Now
-                </button>
-              </div>
-            </div>
-            
-            {isLoadingData ? (
-              <div className="text-center py-8">
-                <div className="text-gray-500">Loading classes...</div>
-              </div>
-            ) : classes.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="text-gray-500">No upcoming classes found</div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                                         <tr>
+              ) : classes.length === 0 ? (
+                <div className="text-center py-8">
+                                       <div className="text-center py-8">
+                       <div className="text-gray-500">No upcoming classes found</div>
+                       <p className="text-sm text-gray-400 mt-2">Try refreshing the data or add new classes</p>
+                     </div>
+                </div>
+              ) : (
+               <div className="overflow-x-auto">
+                 <table className="w-full text-left">
+                   <thead className="bg-gray-50 border-b border-gray-200">
+                     <tr>
                        <th className="px-4 py-3 font-semibold text-gray-900">Class</th>
                        <th className="px-4 py-3 font-semibold text-gray-900">Date</th>
                        <th className="px-4 py-3 font-semibold text-gray-900">Time</th>
                        <th className="px-4 py-3 font-semibold text-gray-900">Bookings</th>
                        <th className="px-4 py-3 font-semibold text-gray-900">Actions</th>
                      </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {classes.map((classItem) => (
-                      <tr key={classItem.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-4">
-                          <div>
-                            <div className="font-medium text-gray-900">{classItem.className}</div>
-                            <div className="text-sm text-gray-500">{classItem.day}</div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-gray-900">{formatDate(classItem.date)}</td>
-                                                 <td className="px-4 py-4 text-gray-900">
+                   </thead>
+                   <tbody className="divide-y divide-gray-200">
+                     {classes.map((classItem) => (
+                       <tr key={classItem.id} className="hover:bg-gray-50">
+                         <td className="px-4 py-4">
+                           <div>
+                             <div className="font-medium text-gray-900">{classItem.className}</div>
+                             <div className="text-sm text-gray-500">{classItem.day}</div>
+                           </div>
+                         </td>
+                         <td className="px-4 py-4 text-gray-900">{formatDate(classItem.date)}</td>
+                         <td className="px-4 py-4 text-gray-900">
                            {formatTime(classItem.time)} - {formatTime(classItem.endTime)}
                          </td>
                          <td className="px-4 py-4">
-                          <div className="text-sm">
-                            <div className="font-medium text-gray-900">
-                              {classItem.currentBookings} / {classItem.maxSpots} spots filled
-                            </div>
-                            {classItem.bookings.length > 0 && (
-                              <div className="mt-2 space-y-1">
-                                {classItem.bookings.map((booking) => (
-                                  <div key={booking.id} className="flex items-center justify-between text-xs text-gray-600">
-                                    <span>{booking.userName}</span>
-                                    <button
-                                      onClick={() => handleCancelBooking(booking.id)}
-                                      className="text-red-600 hover:text-red-800 ml-2"
-                                      title="Cancel this booking"
-                                    >
-                                      ✕
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <button
-                            onClick={() => handleRemoveClass(classItem.classId)}
-                            className="text-red-600 hover:text-red-800 text-sm font-medium"
-                            title="Remove this class"
-                          >
-                            Remove Class
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                           <div className="text-sm">
+                             <div className="font-medium text-gray-900">
+                               {classItem.currentBookings} / {classItem.maxSpots} spots filled
+                             </div>
+                             {classItem.bookings.length > 0 && (
+                               <div className="mt-2 space-y-1">
+                                 {classItem.bookings.map((booking) => (
+                                   <div key={booking.id} className="flex items-center justify-between text-xs text-gray-600">
+                                     <span>{booking.userName}</span>
+                                     <button
+                                       onClick={() => handleCancelBooking(booking.id)}
+                                       className="text-red-600 hover:text-red-800 ml-2"
+                                       title="Cancel this booking"
+                                     >
+                                       ✕
+                                     </button>
+                                   </div>
+                                 ))}
+                               </div>
+                             )}
+                           </div>
+                         </td>
+                         <td className="px-4 py-4">
+                           <button
+                             onClick={() => handleRemoveClass(classItem.classId)}
+                             className="text-red-600 hover:text-red-800 text-sm font-medium"
+                             title="Remove this class"
+                           >
+                             Remove Class
+                           </button>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+             )}
+           </div>
         </div>
       </main>
       

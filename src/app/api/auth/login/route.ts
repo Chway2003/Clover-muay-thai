@@ -66,6 +66,10 @@ export async function POST(request: NextRequest) {
     // Return user data (without password) and token
     const { password: _, ...userWithoutPassword } = user;
 
+    console.log('Login API: User found:', user);
+    console.log('Login API: User without password:', userWithoutPassword);
+    console.log('Login API: Token created:', token ? 'exists' : 'missing');
+
     return NextResponse.json({
       message: 'Login successful',
       user: userWithoutPassword,

@@ -35,7 +35,7 @@ interface Booking {
 }
 
 export default function BookingPage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -67,10 +67,17 @@ export default function BookingPage() {
     console.log('Classes state changed:', classes);
   }, [bookings, classes]);
 
+  // Debug effect to log when user changes
+  useEffect(() => {
+    console.log('User state changed:', user);
+    console.log('User ID:', user?.id);
+    console.log('User name:', user?.name);
+    console.log('Is loading:', isLoading);
+  }, [user, isLoading]);
+
   const loadData = async () => {
     try {
       setIsLoadingData(true);
-      console.log('Loading data...'); // Debug log
       
       const response = await fetch('/api/bookings', {
         method: 'GET',
@@ -79,17 +86,12 @@ export default function BookingPage() {
         },
       });
       
-      console.log('Response status:', response.status); // Debug log
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('Loaded data:', data); // Debug log
         setClasses(data.classes || []);
         setBookings(data.bookings || []);
       } else {
         console.error('Failed to load data:', response.status);
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -98,7 +100,9 @@ export default function BookingPage() {
     }
   };
 
-  const handleBooking = async (classId: string) => {
+  const handleBookingNew = async (classId: string) => {
+    console.log('🎯 NEW BOOKING FUNCTION CALLED with classId:', classId);
+    
     if (!selectedDate) {
       setBookingStatus({
         type: 'error',
@@ -107,24 +111,47 @@ export default function BookingPage() {
       return;
     }
 
+
+
+    if (!user?.id || !user?.name) {
+      setBookingStatus({
+        type: 'error',
+        message: 'User not properly authenticated. Please log in again.'
+      });
+      return;
+    }
+
+    // Prevent admin users from booking classes
+    if (user?.isAdmin) {
+      setBookingStatus({
+        type: 'error',
+        message: 'Admin users cannot book classes. Please use a regular user account.'
+      });
+      return;
+    }
+
     try {
-      console.log('Attempting to book class:', { classId, selectedDate, user: user?.id, userName: user?.name });
+      const requestBody = {
+        userId: user?.id,
+        userName: user?.name,
+        classId,
+        date: selectedDate
+      };
+      
+      console.log('Sending booking request:', requestBody);
+      console.log('User object:', user);
       
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId: user?.id,
-          userName: user?.name,
-          classId,
-          date: selectedDate
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
-      console.log('Booking response:', { status: response.status, data });
+      console.log('Response status:', response.status);
+      console.log('Response data:', data);
 
       if (response.ok) {
         setBookingStatus({
@@ -142,6 +169,7 @@ export default function BookingPage() {
         });
       }
     } catch (error) {
+      console.error('Booking error:', error);
       setBookingStatus({
         type: 'error',
         message: 'An error occurred while booking'
@@ -185,10 +213,6 @@ export default function BookingPage() {
     const userBookings = bookings.filter(booking => 
       booking.userId === user?.id
     );
-    
-    console.log('All bookings:', bookings); // Debug log
-    console.log('User ID:', user?.id); // Debug log
-    console.log('User bookings:', userBookings); // Debug log
     
     // Sort by date (earliest first)
     return userBookings.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -244,11 +268,11 @@ export default function BookingPage() {
       
       <main className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {/* Page Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-white mb-4">Book Your Classes</h1>
-            <p className="text-clover-gold text-lg">Reserve your spot in our Muay Thai classes</p>
-          </div>
+                     {/* Page Header */}
+           <div className="text-center mb-12">
+             <h1 className="text-4xl font-bold text-white mb-4">Book Your Classes</h1>
+             <p className="text-clover-gold text-lg">Reserve your spot in our Muay Thai classes</p>
+           </div>
 
           {/* Status Message */}
           {bookingStatus.type && (
@@ -343,6 +367,17 @@ export default function BookingPage() {
              <div className="bg-white rounded-lg shadow-xl p-6 mb-8">
                <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Time Slots</h2>
                
+               {/* Show admin message if user is admin */}
+               {user?.isAdmin && (
+                 <div className="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded-lg">
+                   <div className="text-yellow-800 text-center">
+                     <div className="font-semibold mb-2">⚠️ Admin Access Detected</div>
+                     <p>Admin users cannot book classes. This page is for regular users to book classes.</p>
+                     <p className="text-sm mt-2">Use the <a href="/admin" className="underline font-medium">Admin Dashboard</a> to manage classes and bookings.</p>
+                   </div>
+                 </div>
+               )}
+               
                {isLoadingData ? (
                  <div className="text-center py-8">
                    <div className="text-gray-500">Loading time slots...</div>
@@ -405,21 +440,27 @@ export default function BookingPage() {
                                   </div>
                                 </div>
                                 
-                                <button
-                                  onClick={() => handleBooking(classItem.id)}
-                                  disabled={classItem.isFull || isBooked || isDateInPast}
-                                  className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
-                                    isBooked
-                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                      : classItem.isFull
-                                      ? 'bg-red-500 text-white cursor-not-allowed'
-                                      : isDateInPast
-                                      ? 'bg-gray-400 text-gray-500 cursor-not-allowed'
-                                      : 'bg-clover-gold text-clover-green hover:bg-yellow-400'
-                                  }`}
-                                >
-                                  {isBooked ? 'Already Booked' : classItem.isFull ? 'Class Full' : isDateInPast ? 'Date Passed' : 'Book Now'}
-                                </button>
+                                                                 <button
+                                   onClick={() => {
+                                     console.log('Class item being booked:', classItem);
+                                     console.log('Class ID being passed:', classItem.id);
+                                     handleBookingNew(classItem.id);
+                                   }}
+                                   disabled={classItem.isFull || isBooked || isDateInPast || user?.isAdmin}
+                                   className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+                                     user?.isAdmin
+                                       ? 'bg-gray-400 text-gray-500 cursor-not-allowed'
+                                       : isBooked
+                                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                       : classItem.isFull
+                                       ? 'bg-red-500 text-white cursor-not-allowed'
+                                       : isDateInPast
+                                       ? 'bg-gray-400 text-gray-500 cursor-not-allowed'
+                                       : 'bg-clover-gold text-clover-green hover:bg-yellow-400'
+                                   }`}
+                                 >
+                                   {user?.isAdmin ? 'Admin Cannot Book' : isBooked ? 'Already Booked' : classItem.isFull ? 'Class Full' : isDateInPast ? 'Date Passed' : 'Book Now'}
+                                 </button>
                               </div>
                             );
                          })}
