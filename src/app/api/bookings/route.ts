@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DataService } from '@/lib/dataService';
+import { isDateBookable } from '@/lib/bookingUtils';
 
 
 
@@ -28,12 +29,12 @@ export async function GET() {
       );
     }
     
-    // Calculate available spots for each class
+    // Calculate available spots for each class, filtering out past dates
     const classesWithAvailability = timetable.map((classItem: any) => {
-      const classBookings = bookings.filter((booking: any) => 
-        booking.classId === classItem.id && 
-        new Date(booking.date) >= new Date()
-      );
+      // Filter bookings to only include current and future dates
+      const classBookings = bookings.filter((booking: any) => {
+        return booking.classId === classItem.id && isDateBookable(booking.date);
+      });
       
       return {
         ...classItem,
@@ -78,6 +79,14 @@ export async function POST(request: NextRequest) {
       console.log('Missing required fields:', { userId, userName, classId, date });
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Check if the date is bookable according to new rules
+    if (!isDateBookable(date)) {
+      return NextResponse.json(
+        { error: 'Cannot book classes for past dates. You can only book for today or future dates.' },
         { status: 400 }
       );
     }

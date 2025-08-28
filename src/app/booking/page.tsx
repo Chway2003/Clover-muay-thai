@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { isDateInPast, isDateBookable, getSameDayBookingCutoff } from '@/lib/bookingUtils';
 
 interface ClassItem {
   id: string;
@@ -254,6 +255,37 @@ export default function BookingPage() {
     return 'Week';
   };
 
+  // New function to check if a date is bookable according to the new rules
+  const isDateBookableForUser = (date: string): boolean => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    
+    // Set both dates to start of day for accurate comparison
+    selectedDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    
+    // Date is bookable if it's today or in the future
+    return selectedDate >= today;
+  };
+
+  // New function to get the status message for date selection
+  const getDateStatusMessage = (date: string): string => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    
+    // Set both dates to start of day for accurate comparison
+    selectedDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate.getTime() === today.getTime()) {
+      return 'Today - Bookable until midnight';
+    } else if (selectedDate > today) {
+      return 'Future date - Bookable';
+    } else {
+      return 'Past date - Not bookable';
+    }
+  };
+
   if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-clover-green flex items-center justify-center">
@@ -336,7 +368,8 @@ export default function BookingPage() {
                   const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
                   const dayNum = dateObj.getDate();
                   const isSelected = selectedDate === date;
-                  const isDateInPast = dateObj < new Date();
+                  const isDateInPast = !isDateBookableForUser(date);
+                  const dateStatus = getDateStatusMessage(date);
                   
                   return (
                     <button
@@ -350,6 +383,7 @@ export default function BookingPage() {
                           ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'border-gray-300 bg-white text-gray-700 hover:border-clover-gold hover:bg-gray-50'
                       }`}
+                      title={dateStatus}
                     >
                       <div className="text-sm font-medium">{dayName}</div>
                       <div className="text-lg font-bold">{dayNum}</div>
@@ -359,6 +393,16 @@ export default function BookingPage() {
                     </button>
                   );
                 })}
+             </div>
+             
+             {/* Add information about booking rules */}
+             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+               <div className="text-sm text-blue-800">
+                 <div className="font-semibold mb-1">📅 Booking Rules:</div>
+                 <p>• You can book classes for today until midnight</p>
+                 <p>• Future dates are always available for booking</p>
+                 <p>• Past dates cannot be booked</p>
+               </div>
              </div>
            </div>
 
@@ -420,8 +464,8 @@ export default function BookingPage() {
                               );
                             });
                            
-                                                       // Check if the selected date is in the past
-                            const isDateInPast = new Date(selectedDate) < new Date();
+                                                       // Check if the selected date is bookable according to new rules
+                            const isDateBookable = isDateBookableForUser(selectedDate);
                             
                             return (
                               <div key={classItem.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow text-center">
@@ -446,7 +490,7 @@ export default function BookingPage() {
                                      console.log('Class ID being passed:', classItem.id);
                                      handleBookingNew(classItem.id);
                                    }}
-                                   disabled={classItem.isFull || isBooked || isDateInPast || user?.isAdmin}
+                                   disabled={classItem.isFull || isBooked || !isDateBookable || user?.isAdmin}
                                    className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
                                      user?.isAdmin
                                        ? 'bg-gray-400 text-gray-500 cursor-not-allowed'
@@ -454,12 +498,12 @@ export default function BookingPage() {
                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                        : classItem.isFull
                                        ? 'bg-red-500 text-white cursor-not-allowed'
-                                       : isDateInPast
+                                       : !isDateBookable
                                        ? 'bg-gray-400 text-gray-500 cursor-not-allowed'
                                        : 'bg-clover-gold text-clover-green hover:bg-yellow-400'
                                    }`}
                                  >
-                                   {user?.isAdmin ? 'Admin Cannot Book' : isBooked ? 'Already Booked' : classItem.isFull ? 'Class Full' : isDateInPast ? 'Date Passed' : 'Book Now'}
+                                   {user?.isAdmin ? 'Admin Cannot Book' : isBooked ? 'Already Booked' : classItem.isFull ? 'Class Full' : !isDateBookable ? 'Date Not Bookable' : 'Book Now'}
                                  </button>
                               </div>
                             );

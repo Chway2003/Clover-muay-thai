@@ -22,8 +22,39 @@ export const getNextWeekDates = (): string[] => {
   return dates;
 };
 
+// Updated function to implement the new booking restriction
+// Users can only book for the current day until the next day becomes the current day
 export const isDateInPast = (date: string): boolean => {
-  return new Date(date) < new Date();
+  const selectedDate = new Date(date);
+  const today = new Date();
+  
+  // Set both dates to start of day for accurate comparison
+  selectedDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  
+  // Date is in the past if it's before today
+  return selectedDate < today;
+};
+
+// New function to check if a date is bookable according to the new rules
+export const isDateBookable = (date: string): boolean => {
+  const selectedDate = new Date(date);
+  const today = new Date();
+  
+  // Set both dates to start of day for accurate comparison
+  selectedDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  
+  // Date is bookable if it's today or in the future
+  return selectedDate >= today;
+};
+
+// New function to get the cutoff time for same-day bookings
+export const getSameDayBookingCutoff = (): Date => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  return tomorrow;
 };
 
 export const getDayName = (date: string): string => {
