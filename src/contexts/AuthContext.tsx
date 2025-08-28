@@ -17,6 +17,7 @@ interface AuthContextType {
   register: (email: string, name: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -164,6 +165,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const forgotPassword = async (email: string) => {
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Password reset failed');
+      }
+
+      console.log('Password reset successful:', data);
+      alert('Password reset instructions sent to your email.');
+    } catch (error: any) {
+      throw new Error(error.message || 'Password reset failed');
+    }
+  };
+
   const value = {
     user,
     token,
@@ -171,6 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register,
     logout,
     refreshUser,
+    forgotPassword,
     isLoading,
   };
 
