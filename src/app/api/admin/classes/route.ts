@@ -1,36 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import jwt from 'jsonwebtoken';
-
-const timetableFilePath = path.join(process.cwd(), 'data', 'timetable.json');
-const bookingsFilePath = path.join(process.cwd(), 'data', 'bookings.json');
-
-// Helper function to read timetable
-const readTimetable = () => {
-  const data = fs.readFileSync(timetableFilePath, 'utf-8');
-  return JSON.parse(data);
-};
-
-// Helper function to write timetable
-const writeTimetable = (timetable: any[]) => {
-  fs.writeFileSync(timetableFilePath, JSON.stringify(timetable, null, 2));
-};
-
-// Helper function to read bookings
-const readBookings = () => {
-  if (!fs.existsSync(bookingsFilePath)) {
-    fs.writeFileSync(bookingsFilePath, '[]');
-    return [];
-  }
-  const data = fs.readFileSync(bookingsFilePath, 'utf-8');
-  return JSON.parse(data);
-};
-
-// Helper function to write bookings
-const writeBookings = (bookings: any[]) => {
-  fs.writeFileSync(bookingsFilePath, JSON.stringify(bookings, null, 2));
-};
+import { DataService } from '@/lib/dataService';
 
 // Middleware to check admin access
 const checkAdminAccess = async (request: NextRequest) => {
@@ -62,8 +32,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const timetable = readTimetable();
-    const bookings = readBookings();
+    const timetable = await DataService.getTimetable();
+    const bookings = await DataService.getBookings();
     
     console.log('Admin API: Timetable count:', timetable.length);
     console.log('Admin API: Bookings count:', bookings.length);
@@ -172,7 +142,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const timetable = readTimetable();
+    const timetable = await DataService.getTimetable();
     
     // Generate unique ID
     const id = `${day.toLowerCase().substring(0, 3)}-${time.replace(':', '')}`;
@@ -198,7 +168,7 @@ export async function POST(request: NextRequest) {
     };
 
     timetable.push(newClass);
-    writeTimetable(timetable);
+    await DataService.saveTimetable(timetable);
 
     return NextResponse.json({
       message: 'Class added successfully',
@@ -236,7 +206,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const timetable = readTimetable();
+    const timetable = await DataService.getTimetable();
     const classIndex = timetable.findIndex((c: any) => c.id === classId);
 
     if (classIndex === -1) {
@@ -248,12 +218,12 @@ export async function DELETE(request: NextRequest) {
 
     // Remove the class
     const deletedClass = timetable.splice(classIndex, 1)[0];
-    writeTimetable(timetable);
+    await DataService.saveTimetable(timetable);
 
     // Also remove any existing bookings for this class
-    const bookings = readBookings();
+    const bookings = await DataService.getBookings();
     const updatedBookings = bookings.filter((booking: any) => booking.classId !== classId);
-    writeBookings(updatedBookings);
+    await DataService.saveBookings(updatedBookings);
 
     return NextResponse.json({
       message: 'Class removed successfully',
