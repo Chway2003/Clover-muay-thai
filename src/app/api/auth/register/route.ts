@@ -71,10 +71,10 @@ export async function POST(request: NextRequest) {
     } catch (readError) {
       console.error('Error reading users file:', readError);
       console.error('Read error details:', {
-        code: readError.code,
-        errno: readError.errno,
-        path: readError.path,
-        syscall: readError.syscall
+        code: (readError as any).code,
+        errno: (readError as any).errno,
+        path: (readError as any).path,
+        syscall: (readError as any).syscall
       });
       
       // If file is corrupted or doesn't exist, create a new one
@@ -138,10 +138,10 @@ export async function POST(request: NextRequest) {
     } catch (writeError) {
       console.error('Error writing users file:', writeError);
       console.error('Write error details:', {
-        code: writeError.code,
-        errno: writeError.errno,
-        path: writeError.path,
-        syscall: writeError.syscall
+        code: (writeError as any).code,
+        errno: (writeError as any).errno,
+        path: (writeError as any).path,
+        syscall: (writeError as any).syscall
       });
       
       // Clean up temp file if it exists
