@@ -163,8 +163,19 @@ export class DataService {
   static async getTimetable() {
     try {
       if (this.isProduction()) {
-        const timetable = await kv.get('timetable');
-        return Array.isArray(timetable) ? timetable : [];
+        try {
+          const timetable = await kv.get('timetable');
+          return Array.isArray(timetable) ? timetable : [];
+        } catch (kvError) {
+          console.error('KV error, falling back to file system:', kvError);
+          // Fallback to file system in production if KV fails
+          const tmpPath = '/tmp/timetable.json';
+          if (fs.existsSync(tmpPath)) {
+            const data = fs.readFileSync(tmpPath, 'utf-8');
+            return JSON.parse(data);
+          }
+          return [];
+        }
       } else {
         // Local file system fallback
         const filePath = this.getFilePath('timetable.json');
@@ -187,7 +198,14 @@ export class DataService {
   static async saveTimetable(timetable: any[]) {
     try {
       if (this.isProduction()) {
-        await kv.set('timetable', timetable);
+        try {
+          await kv.set('timetable', timetable);
+        } catch (kvError) {
+          console.error('KV save error, falling back to file system:', kvError);
+          // Fallback to file system in production if KV fails
+          const tmpPath = '/tmp/timetable.json';
+          fs.writeFileSync(tmpPath, JSON.stringify(timetable, null, 2));
+        }
       } else {
         // Local file system fallback
         const filePath = this.getFilePath('timetable.json');
