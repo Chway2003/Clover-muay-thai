@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { kv } from '@vercel/kv';
-import fs from 'fs';
-import path from 'path';
-
-const usersFilePath = path.join(process.cwd(), 'data', 'users.json');
-const isProduction = process.env.NODE_ENV === 'production';
-const productionUsersPath = '/tmp/users.json';
+import { DataService } from '@/lib/dataService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,27 +42,8 @@ export async function POST(request: NextRequest) {
       }
     ];
 
-    // Save users data
-    if (isProduction) {
-      try {
-        await kv.set('users', JSON.stringify(allUsers, null, 2));
-        console.log('KV write successful, created all users');
-      } catch (kvError) {
-        console.error('KV write error:', kvError);
-        try {
-          fs.writeFileSync(productionUsersPath, JSON.stringify(allUsers, null, 2));
-          console.log('Successfully created all users in /tmp');
-        } catch (fileError) {
-          console.error('Error writing to /tmp:', fileError);
-          return NextResponse.json(
-            { error: 'Failed to create users' },
-            { status: 500 }
-          );
-        }
-      }
-    } else {
-      fs.writeFileSync(usersFilePath, JSON.stringify(allUsers, null, 2));
-    }
+    // Save users data using DataService
+    await DataService.saveUsers(allUsers);
 
     return NextResponse.json({
       message: 'All users created successfully',
