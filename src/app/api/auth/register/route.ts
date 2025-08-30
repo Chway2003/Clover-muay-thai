@@ -84,9 +84,9 @@ export async function POST(request: NextRequest) {
       } catch (kvError) {
         console.error('KV write error:', kvError);
         console.error('KV error details:', {
-          message: kvError.message,
-          code: kvError.code,
-          name: kvError.name
+          message: (kvError as any).message,
+          code: (kvError as any).code,
+          name: (kvError as any).name
         });
         
         // Fallback to in-memory storage

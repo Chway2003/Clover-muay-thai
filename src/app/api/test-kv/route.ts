@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: false,
       message: 'Vercel KV is not working',
-      error: error.message,
+      error: (error as any).message,
       environment: process.env.NODE_ENV,
       kvUrl: process.env.KV_URL ? 'Set' : 'Not set',
       kvToken: process.env.KV_REST_API_TOKEN ? 'Set' : 'Not set'
