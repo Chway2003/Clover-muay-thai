@@ -2,6 +2,30 @@ import { kv } from '@vercel/kv';
 import fs from 'fs';
 import path from 'path';
 
+// Check if we have Redis/KV environment variables
+const hasKvConfig = () => {
+  return !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) || 
+         !!(process.env.REDIS_URL);
+};
+
+// Get the appropriate Redis configuration
+const getRedisConfig = () => {
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    return {
+      url: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN
+    };
+  } else if (process.env.REDIS_URL) {
+    // Parse REDIS_URL to extract components
+    const url = new URL(process.env.REDIS_URL);
+    return {
+      url: `https://${url.hostname}:${url.port || 443}`,
+      token: url.password
+    };
+  }
+  return null;
+};
+
 // Data service using Vercel KV on production, file system locally
 export class DataService {
   private static isProduction() {
@@ -32,7 +56,7 @@ export class DataService {
   // Users
   static async getUsers() {
     try {
-      if (this.isProduction()) {
+      if (this.isProduction() && hasKvConfig()) {
         try {
           const users = await kv.get('users');
           return Array.isArray(users) ? users : [];
@@ -63,7 +87,7 @@ export class DataService {
 
   static async saveUsers(users: any[]) {
     try {
-      if (this.isProduction()) {
+      if (this.isProduction() && hasKvConfig()) {
         try {
           await kv.set('users', users);
         } catch (kvError) {
