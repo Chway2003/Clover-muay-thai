@@ -33,8 +33,19 @@ export class DataService {
   static async getUsers() {
     try {
       if (this.isProduction()) {
-        const users = await kv.get('users');
-        return Array.isArray(users) ? users : [];
+        try {
+          const users = await kv.get('users');
+          return Array.isArray(users) ? users : [];
+        } catch (kvError) {
+          console.error('KV error, falling back to file system:', kvError);
+          // Fallback to file system in production if KV fails
+          const tmpPath = '/tmp/users.json';
+          if (fs.existsSync(tmpPath)) {
+            const data = fs.readFileSync(tmpPath, 'utf-8');
+            return JSON.parse(data);
+          }
+          return [];
+        }
       } else {
         // Local file system fallback
         const filePath = this.getFilePath('users.json');
@@ -53,7 +64,14 @@ export class DataService {
   static async saveUsers(users: any[]) {
     try {
       if (this.isProduction()) {
-        await kv.set('users', users);
+        try {
+          await kv.set('users', users);
+        } catch (kvError) {
+          console.error('KV save error, falling back to file system:', kvError);
+          // Fallback to file system in production if KV fails
+          const tmpPath = '/tmp/users.json';
+          fs.writeFileSync(tmpPath, JSON.stringify(users, null, 2));
+        }
       } else {
         // Local file system fallback
         const filePath = this.getFilePath('users.json');
@@ -102,8 +120,19 @@ export class DataService {
   static async getBookings() {
     try {
       if (this.isProduction()) {
-        const bookings = await kv.get('bookings');
-        return Array.isArray(bookings) ? bookings : [];
+        try {
+          const bookings = await kv.get('bookings');
+          return Array.isArray(bookings) ? bookings : [];
+        } catch (kvError) {
+          console.error('KV error, falling back to file system:', kvError);
+          // Fallback to file system in production if KV fails
+          const tmpPath = '/tmp/bookings.json';
+          if (fs.existsSync(tmpPath)) {
+            const data = fs.readFileSync(tmpPath, 'utf-8');
+            return JSON.parse(data);
+          }
+          return [];
+        }
       } else {
         // Local file system fallback
         const filePath = this.getFilePath('bookings.json');
@@ -122,7 +151,14 @@ export class DataService {
   static async saveBookings(bookings: any[]) {
     try {
       if (this.isProduction()) {
-        await kv.set('bookings', bookings);
+        try {
+          await kv.set('bookings', bookings);
+        } catch (kvError) {
+          console.error('KV save error, falling back to file system:', kvError);
+          // Fallback to file system in production if KV fails
+          const tmpPath = '/tmp/bookings.json';
+          fs.writeFileSync(tmpPath, JSON.stringify(bookings, null, 2));
+        }
       } else {
         // Local file system fallback
         const filePath = this.getFilePath('bookings.json');
