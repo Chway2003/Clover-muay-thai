@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Update the test user's password hash
     let updated = false;
-    users = users.map(user => {
+    users = users.map((user: any) => {
       if (user.email === 'test@test.com') {
         updated = true;
         return {
