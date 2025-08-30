@@ -1,23 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const bookingsFilePath = path.join(process.cwd(), 'data', 'bookings.json');
-
-// Helper function to read bookings
-const readBookings = () => {
-  if (!fs.existsSync(bookingsFilePath)) {
-    fs.writeFileSync(bookingsFilePath, '[]');
-    return [];
-  }
-  const data = fs.readFileSync(bookingsFilePath, 'utf-8');
-  return JSON.parse(data);
-};
-
-// Helper function to write bookings
-const writeBookings = (bookings: any[]) => {
-  fs.writeFileSync(bookingsFilePath, JSON.stringify(bookings, null, 2));
-};
+import { DataService } from '@/lib/dataService';
 
 export async function DELETE(
   request: NextRequest,
@@ -34,25 +16,17 @@ export async function DELETE(
       );
     }
 
-    const bookings = readBookings();
-    const bookingIndex = bookings.findIndex((booking: any) => 
-      booking.id === params.id && booking.userId === userId
-    );
-
-    if (bookingIndex === -1) {
+    const success = await DataService.removeBooking(params.id, userId);
+    
+    if (!success) {
       return NextResponse.json(
         { error: 'Booking not found or unauthorized' },
         { status: 404 }
       );
     }
 
-    // Remove the booking
-    const deletedBooking = bookings.splice(bookingIndex, 1)[0];
-    writeBookings(bookings);
-
     return NextResponse.json({
-      message: 'Booking cancelled successfully',
-      booking: deletedBooking
+      message: 'Booking cancelled successfully'
     });
 
   } catch (error) {
@@ -78,7 +52,7 @@ export async function PUT(
       );
     }
 
-    const bookings = readBookings();
+    const bookings = await DataService.getBookings();
     const bookingIndex = bookings.findIndex((booking: any) => 
       booking.id === params.id && booking.userId === userId
     );
@@ -92,7 +66,7 @@ export async function PUT(
 
     // Update the booking date
     bookings[bookingIndex].date = new Date(date).toISOString();
-    writeBookings(bookings);
+    await DataService.saveBookings(bookings);
 
     return NextResponse.json({
       message: 'Booking updated successfully',

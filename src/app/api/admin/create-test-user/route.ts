@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { kv } from '@vercel/kv';
-import fs from 'fs';
-import path from 'path';
-
-const usersFilePath = path.join(process.cwd(), 'data', 'users.json');
-const isProduction = process.env.NODE_ENV === 'production';
-const productionUsersPath = '/tmp/users.json';
+import { DataService } from '@/lib/dataService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,57 +24,15 @@ export async function POST(request: NextRequest) {
       isAdmin: false
     };
 
-    // Read existing users
-    let users = [];
-    if (isProduction) {
-      try {
-        const usersData = await kv.get('users');
-        users = usersData ? JSON.parse(usersData as string) : [];
-      } catch (kvError) {
-        console.error('KV read error:', kvError);
-        try {
-          if (fs.existsSync(productionUsersPath)) {
-            const usersData = fs.readFileSync(productionUsersPath, 'utf-8');
-            users = JSON.parse(usersData);
-          }
-        } catch (fileError) {
-          console.error('Error reading from /tmp:', fileError);
-        }
-      }
-    } else {
-      if (fs.existsSync(usersFilePath)) {
-        const usersData = fs.readFileSync(usersFilePath, 'utf-8');
-        users = JSON.parse(usersData);
-      }
-    }
-
-    // Remove existing test user if it exists
-    users = users.filter((user: any) => user.email !== 'test@test.com');
+    // Read existing users and remove test user if exists
+    const users = await DataService.getUsers();
+    const filteredUsers = users.filter((user: any) => user.email !== 'test@test.com');
     
     // Add new test user
-    users.push(testUser);
+    filteredUsers.push(testUser);
 
     // Save users data
-    if (isProduction) {
-      try {
-        await kv.set('users', JSON.stringify(users, null, 2));
-        console.log('KV write successful, created test user');
-      } catch (kvError) {
-        console.error('KV write error:', kvError);
-        try {
-          fs.writeFileSync(productionUsersPath, JSON.stringify(users, null, 2));
-          console.log('Successfully created test user in /tmp');
-        } catch (fileError) {
-          console.error('Error writing to /tmp:', fileError);
-          return NextResponse.json(
-            { error: 'Failed to create test user' },
-            { status: 500 }
-          );
-        }
-      }
-    } else {
-      fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2));
-    }
+    await DataService.saveUsers(filteredUsers);
 
     return NextResponse.json({
       message: 'Test user created successfully',

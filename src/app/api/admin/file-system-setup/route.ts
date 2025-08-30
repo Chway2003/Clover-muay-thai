@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { DataService } from '@/lib/dataService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -100,24 +99,21 @@ export async function POST(request: NextRequest) {
       }
     ];
     
-    // Try to save to /tmp directory (available in Vercel)
-    const tmpPath = '/tmp/timetable.json';
-    console.log('Saving timetable to file system...');
-    fs.writeFileSync(tmpPath, JSON.stringify(defaultTimetable, null, 2));
-    console.log('Timetable saved to file system successfully');
+    // Save timetable using DataService
+    console.log('Saving timetable using DataService...');
+    await DataService.saveTimetable(defaultTimetable);
+    console.log('Timetable saved successfully');
     
     // Verify it was saved by reading it back
-    console.log('Reading timetable back from file system...');
-    const savedData = fs.readFileSync(tmpPath, 'utf-8');
-    const savedTimetable = JSON.parse(savedData);
-    console.log('Retrieved timetable from file system:', { count: savedTimetable.length });
+    console.log('Reading timetable back...');
+    const savedTimetable = await DataService.getTimetable();
+    console.log('Retrieved timetable:', { count: savedTimetable.length });
     
     return NextResponse.json({
-      message: 'File system timetable setup complete',
+      message: 'Timetable setup complete using DataService',
       timetableCount: savedTimetable.length,
       timetable: savedTimetable,
-      isProduction: process.env.NODE_ENV === 'production' || process.env.VERCEL === '1',
-      filePath: tmpPath
+      isProduction: process.env.NODE_ENV === 'production' || process.env.VERCEL === '1'
     });
   } catch (error) {
     console.error('Error in file system setup:', error);
