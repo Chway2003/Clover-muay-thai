@@ -162,17 +162,22 @@ export class DataService {
   // Timetable
   static async getTimetable() {
     try {
-      // For now, just use file system to get it working
-      const filePath = this.getFilePath('timetable.json');
-      console.log('Looking for timetable file at:', filePath);
-      if (!fs.existsSync(filePath)) {
-        console.log('Timetable file not found, returning empty array');
-        return [];
+      if (this.isProduction()) {
+        const timetable = await kv.get('timetable');
+        return Array.isArray(timetable) ? timetable : [];
+      } else {
+        // Local file system fallback
+        const filePath = this.getFilePath('timetable.json');
+        console.log('Looking for timetable file at:', filePath);
+        if (!fs.existsSync(filePath)) {
+          console.log('Timetable file not found, returning empty array');
+          return [];
+        }
+        const data = fs.readFileSync(filePath, 'utf-8');
+        const parsed = JSON.parse(data);
+        console.log('Loaded timetable data:', { count: parsed.length, firstItem: parsed[0] });
+        return parsed;
       }
-      const data = fs.readFileSync(filePath, 'utf-8');
-      const parsed = JSON.parse(data);
-      console.log('Loaded timetable data:', { count: parsed.length, firstItem: parsed[0] });
-      return parsed;
     } catch (error) {
       console.error('Error getting timetable:', error);
       return [];
