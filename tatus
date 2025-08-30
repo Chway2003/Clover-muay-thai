@@ -1,0 +1,5 @@
+[33mfcc533c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix booking system production issue - timetable data persistence
+[33md01d05a[m Implement persistent authentication system with Vercel KV and fallback mechanisms
+[33m38cf5b4[m Add comprehensive user setup endpoint to fix all production login issues
+[33m1d006e7[m Add endpoint to update admin and user account passwords with correct hashes
+[33m105e521[m Fix TypeScript error: Add explicit type annotation for user parameter
