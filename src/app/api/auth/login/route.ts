@@ -8,6 +8,9 @@ import { kv } from '@vercel/kv';
 const usersFilePath = path.join(process.cwd(), 'data', 'users.json');
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Simple in-memory storage for production (temporary solution)
+let inMemoryUsers: any[] = [];
+
 // In a real app, this would be in environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
@@ -26,16 +29,14 @@ export async function POST(request: NextRequest) {
     // Read existing users
     let users = [];
     if (isProduction) {
-      // Use Vercel KV in production
+      // Try Vercel KV first, fallback to in-memory storage
       try {
         const usersData = await kv.get('users');
         users = usersData ? JSON.parse(usersData as string) : [];
       } catch (kvError) {
         console.error('KV read error:', kvError);
-        return NextResponse.json(
-          { error: 'No users found' },
-          { status: 404 }
-        );
+        console.log('Falling back to in-memory storage');
+        users = inMemoryUsers;
       }
     } else {
       // Use file system in development

@@ -94,5 +94,13 @@
     "password": "$2b$12$K4rzetgJsbLTpoKYdgfYLOwxFF/rmM37v6jFNDXQnX2/uGmzBSnpG",
     "createdAt": "2025-08-30T13:44:25.041Z",
     "isAdmin": false
+  },
+  {
+    "id": "1756561782356",
+    "email": "testuser1756561781731@example.com",
+    "name": "Test User Updated",
+    "password": "$2b$12$oF49.bjwBH1mO9KEG7MSoulgQ2q5sG78V0R2siC0jODl2NM5dj9XK",
+    "createdAt": "2025-08-30T13:49:42.356Z",
+    "isAdmin": false
   }
 ]

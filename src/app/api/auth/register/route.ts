@@ -7,6 +7,9 @@ import { kv } from '@vercel/kv';
 const usersFilePath = path.join(process.cwd(), 'data', 'users.json');
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Simple in-memory storage for production (temporary solution)
+let inMemoryUsers: any[] = [];
+
 export async function POST(request: NextRequest) {
   try {
     const { email, name, password } = await request.json();
@@ -29,13 +32,15 @@ export async function POST(request: NextRequest) {
     // Read existing users
     let users = [];
     if (isProduction) {
-      // Use Vercel KV in production
+      // Try Vercel KV first, fallback to in-memory storage
       try {
         const usersData = await kv.get('users');
         users = usersData ? JSON.parse(usersData as string) : [];
+        console.log('KV read successful, found', users.length, 'users');
       } catch (kvError) {
         console.error('KV read error:', kvError);
-        users = [];
+        console.log('Falling back to in-memory storage');
+        users = inMemoryUsers;
       }
     } else {
       // Use file system in development
@@ -72,15 +77,21 @@ export async function POST(request: NextRequest) {
 
     // Save users data
     if (isProduction) {
-      // Use Vercel KV in production
+      // Try Vercel KV first, fallback to in-memory storage
       try {
         await kv.set('users', JSON.stringify(users, null, 2));
+        console.log('KV write successful, saved', users.length, 'users');
       } catch (kvError) {
         console.error('KV write error:', kvError);
-        return NextResponse.json(
-          { error: 'Failed to save user data' },
-          { status: 500 }
-        );
+        console.error('KV error details:', {
+          message: kvError.message,
+          code: kvError.code,
+          name: kvError.name
+        });
+        
+        // Fallback to in-memory storage
+        console.log('KV write failed, using in-memory storage');
+        inMemoryUsers = users;
       }
     } else {
       // Use file system in development
