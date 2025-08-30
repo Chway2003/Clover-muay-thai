@@ -1,24 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import jwt from 'jsonwebtoken';
-
-const bookingsFilePath = path.join(process.cwd(), 'data', 'bookings.json');
-
-// Helper function to read bookings
-const readBookings = () => {
-  if (!fs.existsSync(bookingsFilePath)) {
-    fs.writeFileSync(bookingsFilePath, '[]');
-    return [];
-  }
-  const data = fs.readFileSync(bookingsFilePath, 'utf-8');
-  return JSON.parse(data);
-};
-
-// Helper function to write bookings
-const writeBookings = (bookings: any[]) => {
-  fs.writeFileSync(bookingsFilePath, JSON.stringify(bookings, null, 2));
-};
+import { DataService } from '@/lib/dataService';
 
 // Middleware to check admin access
 const checkAdminAccess = async (request: NextRequest) => {
@@ -61,7 +43,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const bookings = readBookings();
+    const bookings = await DataService.getBookings();
     const bookingIndex = bookings.findIndex((booking: any) => booking.id === params.id);
 
     if (bookingIndex === -1) {
@@ -73,7 +55,7 @@ export async function DELETE(
 
     // Remove the booking
     const deletedBooking = bookings.splice(bookingIndex, 1)[0];
-    writeBookings(bookings);
+    await DataService.saveBookings(bookings);
 
     return NextResponse.json({
       message: 'Booking cancelled successfully',

@@ -24,5 +24,18 @@
     "instructor": "Coach John",
     "date": "2025-09-01T00:00:00.000Z",
     "createdAt": "2025-08-30T18:08:23.508Z"
+  },
+  {
+    "id": "1756579206180",
+    "userId": "1756569935108",
+    "userName": "Test User",
+    "classId": "mon-630",
+    "className": "Beginner Muay Thai",
+    "day": "Monday",
+    "time": "18:30",
+    "endTime": "19:30",
+    "instructor": "Coach John",
+    "date": "2025-09-02T00:00:00.000Z",
+    "createdAt": "2025-08-30T18:40:06.180Z"
   }
 ]

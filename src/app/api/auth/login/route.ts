@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { KVService } from '@/lib/kvService';
+import { DataService } from '@/lib/dataService';
 
 // In a real app, this would be in environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -18,8 +18,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user by email using KVService
-    const user = await KVService.findUserByEmail(email);
+    // Find user by email using DataService
+    const user = await DataService.findUserByEmail(email);
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid email or password' },

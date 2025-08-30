@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { KVService } from '@/lib/kvService';
+import { DataService } from '@/lib/dataService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = await KVService.findUserByEmail(email);
+    const existingUser = await DataService.findUserByEmail(email);
     if (existingUser) {
       return NextResponse.json(
         { error: 'User with this email already exists' },
@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
       isAdmin: false,
     };
 
-    // Add user using KVService
-    await KVService.addUser(newUser);
+    // Add user using DataService
+    await DataService.addUser(newUser);
 
     // Return user data (without password)
     const { password: _, ...userWithoutPassword } = newUser;
