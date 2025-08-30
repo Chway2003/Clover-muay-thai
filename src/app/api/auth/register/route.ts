@@ -17,6 +17,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Please enter a valid email address' },
+        { status: 400 }
+      );
+    }
+
+    // Validate name
+    if (name.trim().length < 2) {
+      return NextResponse.json(
+        { error: 'Name must be at least 2 characters long' },
+        { status: 400 }
+      );
+    }
+
     if (password.length < 6) {
       return NextResponse.json(
         { error: 'Password must be at least 6 characters long' },
@@ -24,14 +41,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if users.json exists, if not create it
-    if (!fs.existsSync(usersFilePath)) {
-      fs.writeFileSync(usersFilePath, '[]');
+    // Ensure data directory exists
+    const dataDir = path.dirname(usersFilePath);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
     }
 
-    // Read existing users
-    const usersData = fs.readFileSync(usersFilePath, 'utf-8');
-    const users = JSON.parse(usersData);
+    // Check if users.json exists, if not create it
+    if (!fs.existsSync(usersFilePath)) {
+      fs.writeFileSync(usersFilePath, '[]', 'utf-8');
+    }
+
+    // Read existing users with better error handling
+    let usersData: string;
+    let users: any[];
+    
+    try {
+      usersData = fs.readFileSync(usersFilePath, 'utf-8');
+      users = JSON.parse(usersData);
+    } catch (readError) {
+      console.error('Error reading users file:', readError);
+      // If file is corrupted, create a new one
+      users = [];
+      fs.writeFileSync(usersFilePath, '[]', 'utf-8');
+    }
 
     // Check if user already exists
     const existingUser = users.find((user: any) => user.email === email);
@@ -59,8 +92,16 @@ export async function POST(request: NextRequest) {
     // Add user to array
     users.push(newUser);
 
-    // Write back to file
-    fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2));
+    // Write back to file with better error handling
+    try {
+      fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2), 'utf-8');
+    } catch (writeError) {
+      console.error('Error writing users file:', writeError);
+      return NextResponse.json(
+        { error: 'Failed to save user data' },
+        { status: 500 }
+      );
+    }
 
     // Return user data (without password)
     const { password: _, ...userWithoutPassword } = newUser;
@@ -72,8 +113,21 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Registration error:', error);
+    
+    // Provide more specific error messages
+    let errorMessage = 'Internal server error';
+    if (error instanceof Error) {
+      if (error.message.includes('ENOENT')) {
+        errorMessage = 'File system error - please try again';
+      } else if (error.message.includes('EACCES')) {
+        errorMessage = 'Permission error - please contact support';
+      } else if (error.message.includes('JSON')) {
+        errorMessage = 'Data corruption error - please try again';
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

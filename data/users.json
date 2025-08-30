@@ -22,5 +22,21 @@
     "password": "$2b$12$RZPEM.hGWiGSfZEiS14a9OZl6r/qfljVjxpax2wLHonwfr0s89egy",
     "createdAt": "2025-08-27T19:37:16.829Z",
     "isAdmin": false
+  },
+  {
+    "id": "1756558152594",
+    "email": "testuser@example.com",
+    "name": "Test User",
+    "password": "$2b$12$bCB3O.jvSlqHRpuhTyEJ2OEC1DNRdm606zZ.QWCae912ChUMubmSa",
+    "createdAt": "2025-08-30T12:49:12.594Z",
+    "isAdmin": false
+  },
+  {
+    "id": "1756558212026",
+    "email": "gumfyltd@gmail.com",
+    "name": "gummy",
+    "password": "$2b$12$J0ZtAMpnlpo.p9tSt9tjkuY8RDtlmpVmVHbGKJyoY8t6nCegHBlv6",
+    "createdAt": "2025-08-30T12:50:12.026Z",
+    "isAdmin": false
   }
 ]
