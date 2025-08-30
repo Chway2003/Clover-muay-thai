@@ -82,11 +82,6 @@ export default function LoginPage() {
                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-0.5 h-4 bg-clover-gold animate-pulse"></div>
                  )}
                </div>
-               <div className="mt-2 text-right">
-                 <Link href="/auth/forgot-password" className="text-sm text-clover-gold hover:text-yellow-400 font-medium">
-                   Forgot your password?
-                 </Link>
-               </div>
             </div>
 
             {error && (

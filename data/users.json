@@ -62,5 +62,21 @@
     "password": "$2b$12$egsiEeDFDAx5AxASlEwQP.mAKV/yhJTHhZzR1Ek/NeXH197OJNZqS",
     "createdAt": "2025-08-30T13:09:56.380Z",
     "isAdmin": false
+  },
+  {
+    "id": "1756560978858",
+    "email": "testuser1756560978534@example.com",
+    "name": "Test User Debug",
+    "password": "$2b$12$hcUYZFmDE4Fo2xTymOgSUO1X7cHtOUAauMFzG80LNdulvg4EOf5Tm",
+    "createdAt": "2025-08-30T13:36:18.858Z",
+    "isAdmin": false
+  },
+  {
+    "id": "1756561080108",
+    "email": "achoual37+test2@gmail.com",
+    "name": "Abdulrahman Choual",
+    "password": "$2b$12$8p.8sTUEtOEI0hcvJ18UV.5ST/yOuaHvxhwQ7pz5Hvhr/2kBxtZoS",
+    "createdAt": "2025-08-30T13:38:00.108Z",
+    "isAdmin": false
   }
 ]
