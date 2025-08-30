@@ -57,13 +57,38 @@ export async function POST(request: NextRequest) {
     let users: any[];
     
     try {
+      console.log('Reading users file:', usersFilePath);
       usersData = fs.readFileSync(usersFilePath, 'utf-8');
-      users = JSON.parse(usersData);
+      console.log('Users file size:', usersData.length, 'characters');
+      
+      if (usersData.trim() === '') {
+        console.log('Users file is empty, initializing with empty array');
+        users = [];
+      } else {
+        users = JSON.parse(usersData);
+        console.log('Successfully parsed users file, found', users.length, 'users');
+      }
     } catch (readError) {
       console.error('Error reading users file:', readError);
-      // If file is corrupted, create a new one
+      console.error('Read error details:', {
+        code: readError.code,
+        errno: readError.errno,
+        path: readError.path,
+        syscall: readError.syscall
+      });
+      
+      // If file is corrupted or doesn't exist, create a new one
       users = [];
-      fs.writeFileSync(usersFilePath, '[]', 'utf-8');
+      try {
+        fs.writeFileSync(usersFilePath, '[]', 'utf-8');
+        console.log('Created new users file');
+      } catch (createError) {
+        console.error('Error creating new users file:', createError);
+        return NextResponse.json(
+          { error: 'Unable to initialize user database' },
+          { status: 500 }
+        );
+      }
     }
 
     // Check if user already exists
@@ -94,11 +119,43 @@ export async function POST(request: NextRequest) {
 
     // Write back to file with better error handling
     try {
-      fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2), 'utf-8');
+      const jsonData = JSON.stringify(users, null, 2);
+      console.log('Attempting to write users file:', usersFilePath);
+      console.log('Data size:', jsonData.length, 'characters');
+      
+      // Use atomic write operation to prevent corruption
+      const tempFilePath = usersFilePath + '.tmp';
+      fs.writeFileSync(tempFilePath, jsonData, 'utf-8');
+      
+      // Verify the written data
+      const writtenData = fs.readFileSync(tempFilePath, 'utf-8');
+      JSON.parse(writtenData); // This will throw if JSON is invalid
+      
+      // If verification passes, rename temp file to actual file
+      fs.renameSync(tempFilePath, usersFilePath);
+      
+      console.log('Successfully wrote users file');
     } catch (writeError) {
       console.error('Error writing users file:', writeError);
+      console.error('Write error details:', {
+        code: writeError.code,
+        errno: writeError.errno,
+        path: writeError.path,
+        syscall: writeError.syscall
+      });
+      
+      // Clean up temp file if it exists
+      const tempFilePath = usersFilePath + '.tmp';
+      if (fs.existsSync(tempFilePath)) {
+        try {
+          fs.unlinkSync(tempFilePath);
+        } catch (cleanupError) {
+          console.error('Error cleaning up temp file:', cleanupError);
+        }
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to save user data' },
+        { error: 'Failed to save user data. Please try again.' },
         { status: 500 }
       );
     }
