@@ -78,5 +78,21 @@
     "password": "$2b$12$8p.8sTUEtOEI0hcvJ18UV.5ST/yOuaHvxhwQ7pz5Hvhr/2kBxtZoS",
     "createdAt": "2025-08-30T13:38:00.108Z",
     "isAdmin": false
+  },
+  {
+    "id": "1756561287973",
+    "email": "testuser1756561287668@example.com",
+    "name": "Test User Current",
+    "password": "$2b$12$qBaqx5RM2OzZDXT0LoSEAO3fJARcYTWQKAok2YL28h820HSt21vFm",
+    "createdAt": "2025-08-30T13:41:27.973Z",
+    "isAdmin": false
+  },
+  {
+    "id": "1756561465041",
+    "email": "testuser1756561464404@example.com",
+    "name": "Test User Current",
+    "password": "$2b$12$K4rzetgJsbLTpoKYdgfYLOwxFF/rmM37v6jFNDXQnX2/uGmzBSnpG",
+    "createdAt": "2025-08-30T13:44:25.041Z",
+    "isAdmin": false
   }
 ]

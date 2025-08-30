@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
+import { kv } from '@vercel/kv';
 
 const usersFilePath = path.join(process.cwd(), 'data', 'users.json');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -31,16 +33,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Read users file to get fresh user data
-    if (!fs.existsSync(usersFilePath)) {
-      return NextResponse.json(
-        { error: 'No users found' },
-        { status: 404 }
-      );
+    // Read users data
+    let users = [];
+    if (isProduction) {
+      // Use Vercel KV in production
+      try {
+        const usersData = await kv.get('users');
+        users = usersData ? JSON.parse(usersData as string) : [];
+      } catch (kvError) {
+        console.error('KV read error:', kvError);
+        return NextResponse.json(
+          { error: 'No users found' },
+          { status: 404 }
+        );
+      }
+    } else {
+      // Use file system in development
+      if (!fs.existsSync(usersFilePath)) {
+        return NextResponse.json(
+          { error: 'No users found' },
+          { status: 404 }
+        );
+      }
+      const usersData = fs.readFileSync(usersFilePath, 'utf-8');
+      users = JSON.parse(usersData);
     }
-
-    const usersData = fs.readFileSync(usersFilePath, 'utf-8');
-    const users = JSON.parse(usersData);
     
     // Find user by ID
     const user = users.find((u: any) => u.id === decoded.userId);
