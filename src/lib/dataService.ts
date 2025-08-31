@@ -9,7 +9,7 @@ const hasKvConfig = () => {
   const hasRedis = !!(process.env.REDIS_URL);
   
   // If KV_REST_API_URL doesn't have protocol, it's likely invalid
-  if (hasKv && !process.env.KV_REST_API_URL.startsWith('https://')) {
+  if (hasKv && process.env.KV_REST_API_URL && !process.env.KV_REST_API_URL.startsWith('https://')) {
     console.warn('KV_REST_API_URL missing https:// protocol, falling back to file system');
     return false;
   }
