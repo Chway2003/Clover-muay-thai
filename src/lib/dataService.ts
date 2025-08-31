@@ -11,8 +11,13 @@ const hasKvConfig = () => {
 // Get the appropriate Redis configuration
 const getRedisConfig = () => {
   if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    // Ensure the URL has the https:// protocol
+    const url = process.env.KV_REST_API_URL.startsWith('https://') 
+      ? process.env.KV_REST_API_URL 
+      : `https://${process.env.KV_REST_API_URL}`;
+    
     return {
-      url: process.env.KV_REST_API_URL,
+      url: url,
       token: process.env.KV_REST_API_TOKEN
     };
   } else if (process.env.REDIS_URL) {
