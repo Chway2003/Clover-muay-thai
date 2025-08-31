@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
 // Email configuration
-const createTransporter = () => {
+const createTransport = () => {
   // For production, use your SMTP settings
   if (process.env.NODE_ENV === 'production') {
     return nodemailer.createTransport({
@@ -16,7 +16,7 @@ const createTransporter = () => {
   }
 
   // For development, use a test account or console logging
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     host: 'smtp.ethereal.email',
     port: 587,
     secure: false,
@@ -32,7 +32,7 @@ export const sendPasswordResetEmail = async (
   name: string,
   resetToken: string
 ): Promise<void> => {
-  const transporter = createTransporter();
+  const transporter = createTransport();
   
   // Create reset URL
   const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clovermuaythai.com'}/auth/reset-password?token=${resetToken}`;
@@ -190,7 +190,7 @@ export const sendPasswordResetEmail = async (
 // Test email configuration
 export const testEmailConfig = async (): Promise<boolean> => {
   try {
-    const transporter = createTransporter();
+    const transporter = createTransport();
     await transporter.verify();
     console.log('Email configuration is valid');
     return true;
