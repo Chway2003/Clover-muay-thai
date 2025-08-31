@@ -22,36 +22,36 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       message: 'Debug data retrieved',
       data: {
-        users: {
-          count: users.length,
-          users: users.map(u => ({
-            id: u.id,
-            email: u.email,
-            name: u.name,
-            isAdmin: u.isAdmin
-          }))
-        },
-        bookings: {
-          count: bookings.length,
-          bookings: bookings.map(b => ({
-            id: b.id,
-            userId: b.userId,
-            userName: b.userName,
-            classId: b.classId,
-            date: b.date,
-            createdAt: b.createdAt
-          }))
-        },
-        timetable: {
-          count: timetable.length,
-          classes: timetable.map(c => ({
-            id: c.id,
-            day: c.day,
-            time: c.time,
-            classType: c.classType,
-            maxSpots: c.maxSpots
-          }))
-        }
+                 users: {
+           count: users.length,
+           users: users.map((u: any) => ({
+             id: u.id,
+             email: u.email,
+             name: u.name,
+             isAdmin: u.isAdmin
+           }))
+         },
+         bookings: {
+           count: bookings.length,
+           bookings: bookings.map((b: any) => ({
+             id: b.id,
+             userId: b.userId,
+             userName: b.userName,
+             classId: b.classId,
+             date: b.date,
+             createdAt: b.createdAt
+           }))
+         },
+         timetable: {
+           count: timetable.length,
+           classes: timetable.map((c: any) => ({
+             id: c.id,
+             day: c.day,
+             time: c.time,
+             classType: c.classType,
+             maxSpots: c.maxSpots
+           }))
+         }
       },
       environment: {
         nodeEnv: process.env.NODE_ENV,
