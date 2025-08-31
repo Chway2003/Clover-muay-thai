@@ -17,9 +17,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
+    // Create response and clear cookies
+    const response = NextResponse.json({
       message: 'Logout successful'
     });
+
+    // Clear session cookies
+    response.cookies.set('sb-access-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0
+    });
+    
+    response.cookies.set('sb-refresh-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0
+    });
+
+    return response;
 
   } catch (error) {
     console.error('Logout error:', error);

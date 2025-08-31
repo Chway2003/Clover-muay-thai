@@ -6,17 +6,24 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the authorization header
+    // Get the authorization header or cookie
     const authHeader = request.headers.get('authorization');
+    const accessToken = request.cookies.get('sb-access-token')?.value;
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    let token = null;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    } else if (accessToken) {
+      token = accessToken;
+    }
+    
+    if (!token) {
       return NextResponse.json(
         { error: 'No authorization token provided' },
         { status: 401 }
       );
     }
-
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Verify the session with Supabase
     const { data: { user }, error } = await supabase.auth.getUser(token);

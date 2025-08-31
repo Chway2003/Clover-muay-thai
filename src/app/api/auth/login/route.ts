@@ -66,12 +66,32 @@ export async function POST(request: NextRequest) {
     console.log('Login API: User found:', userData);
     console.log('Login API: Session created:', data.session ? 'exists' : 'missing');
 
-    return NextResponse.json({
+    // Create response with proper headers for session management
+    const response = NextResponse.json({
       message: 'Login successful',
       user: userData,
       session: data.session,
       accessToken: data.session.access_token
     });
+
+    // Set cookies for session persistence
+    if (data.session) {
+      response.cookies.set('sb-access-token', data.session.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      });
+      
+      response.cookies.set('sb-refresh-token', data.session.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30 // 30 days
+      });
+    }
+
+    return response;
 
   } catch (error) {
     console.error('Login error:', error);
