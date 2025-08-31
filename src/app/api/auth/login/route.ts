@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { DataService } from '@/lib/dataService';
-
-// In a real app, this would be in environment variables
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+import { supabase } from '@/lib/supabaseClient';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,47 +13,61 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user by email using DataService
-    const user = await DataService.findUserByEmail(email);
-    if (!user) {
+    // Sign in with Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      console.error('Supabase login error:', error);
+      
+      // Handle specific Supabase errors
+      if (error.message.includes('Invalid login credentials')) {
+        return NextResponse.json(
+          { error: 'Invalid email or password' },
+          { status: 401 }
+        );
+      }
+      
+      if (error.message.includes('Email not confirmed')) {
+        return NextResponse.json(
+          { error: 'Please check your email and confirm your account before logging in' },
+          { status: 401 }
+        );
+      }
+      
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: error.message || 'Login failed' },
         { status: 401 }
       );
     }
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
+    if (!data.user || !data.session) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
+        { error: 'Login failed - no user or session returned' },
+        { status: 500 }
       );
     }
 
-    // Create JWT token
-    const token = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email,
-        name: user.name,
-        isAdmin: user.isAdmin
-      },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Return user data
+    const userData = {
+      id: data.user.id,
+      email: data.user.email,
+      name: data.user.user_metadata?.name || 'User',
+      isAdmin: data.user.user_metadata?.isAdmin || false,
+      createdAt: data.user.created_at,
+      emailConfirmed: data.user.email_confirmed_at !== null
+    };
 
-    // Return user data (without password) and token
-    const { password: _, ...userWithoutPassword } = user;
-
-    console.log('Login API: User found:', user);
-    console.log('Login API: User without password:', userWithoutPassword);
-    console.log('Login API: Token created:', token ? 'exists' : 'missing');
+    console.log('Login API: User found:', userData);
+    console.log('Login API: Session created:', data.session ? 'exists' : 'missing');
 
     return NextResponse.json({
       message: 'Login successful',
-      user: userWithoutPassword,
-      token,
+      user: userData,
+      session: data.session,
+      accessToken: data.session.access_token
     });
 
   } catch (error) {

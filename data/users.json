@@ -21,7 +21,9 @@
     "name": "abdul",
     "password": "$2b$12$6FBtsby0odPfvs9lx4K/BudQZLNCKt7Ag4XPNn8VJKBOGdTAo3oAO",
     "createdAt": "2025-08-27T19:37:16.829Z",
-    "isAdmin": false
+    "isAdmin": false,
+    "resetToken": "063da4deabf4133a05283db899617aedd80f78dd6a7d5b8a149aafdcba7c3b27",
+    "resetTokenExpiry": "2025-08-30T22:22:39.791Z"
   },
   {
     "id": "1756570773901",

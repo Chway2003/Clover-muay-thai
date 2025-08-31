@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import { DataService } from '@/lib/dataService';
+import { supabase } from '@/lib/supabaseClient';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,37 +20,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
-    const existingUser = await DataService.findUserByEmail(email);
-    if (existingUser) {
+    // Register user with Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name: name,
+          isAdmin: false
+        }
+      }
+    });
+
+    if (error) {
+      console.error('Supabase registration error:', error);
+      
+      // Handle specific Supabase errors
+      if (error.message.includes('already registered')) {
+        return NextResponse.json(
+          { error: 'User with this email already exists' },
+          { status: 409 }
+        );
+      }
+      
       return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 409 }
+        { error: error.message || 'Registration failed' },
+        { status: 400 }
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    if (!data.user) {
+      return NextResponse.json(
+        { error: 'Failed to create user' },
+        { status: 500 }
+      );
+    }
 
-    // Create new user
-    const newUser = {
-      id: Date.now().toString(),
-      email,
-      name,
-      password: hashedPassword,
-      createdAt: new Date().toISOString(),
-      isAdmin: false,
+    // Return user data
+    const userData = {
+      id: data.user.id,
+      email: data.user.email,
+      name: data.user.user_metadata?.name || name,
+      isAdmin: data.user.user_metadata?.isAdmin || false,
+      createdAt: data.user.created_at,
+      emailConfirmed: data.user.email_confirmed_at !== null
     };
-
-    // Add user using DataService
-    await DataService.addUser(newUser);
-
-    // Return user data (without password)
-    const { password: _, ...userWithoutPassword } = newUser;
 
     return NextResponse.json({
       message: 'User registered successfully',
-      user: userWithoutPassword,
+      user: userData,
+      session: data.session
     }, { status: 201 });
 
   } catch (error) {
