@@ -4,8 +4,17 @@ import path from 'path';
 
 // Check if we have Redis/KV environment variables
 const hasKvConfig = () => {
-  return !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) || 
-         !!(process.env.REDIS_URL);
+  // Check if we have valid KV config
+  const hasKv = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+  const hasRedis = !!(process.env.REDIS_URL);
+  
+  // If KV_REST_API_URL doesn't have protocol, it's likely invalid
+  if (hasKv && !process.env.KV_REST_API_URL.startsWith('https://')) {
+    console.warn('KV_REST_API_URL missing https:// protocol, falling back to file system');
+    return false;
+  }
+  
+  return hasKv || hasRedis;
 };
 
 // Get the appropriate Redis configuration
