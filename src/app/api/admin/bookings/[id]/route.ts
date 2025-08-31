@@ -1,33 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { supabase } from '@/lib/supabaseClient';
 import { DataService } from '@/lib/dataService';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 // Middleware to check admin access
 const checkAdminAccess = async (request: NextRequest) => {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.log('Admin Bookings API: No authorization header');
-    return false;
-  }
-  
-  const token = authHeader.substring(7);
   try {
-    // Verify JWT token and check admin status
-    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+    // Get the authorization header or cookie
+    const authHeader = request.headers.get('authorization');
+    const accessToken = request.cookies.get('sb-access-token')?.value;
     
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    console.log('Admin Bookings API: Decoded token:', decoded);
+    let token = null;
     
-    // Check if user has admin privileges
-    if (decoded.isAdmin) {
-      console.log('Admin Bookings API: User is admin');
-      return true;
-    } else {
-      console.log('Admin Bookings API: User is not admin');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    } else if (accessToken) {
+      token = accessToken;
+    }
+    
+    if (!token) {
+      console.log('Admin Bookings API: No authorization token');
       return false;
     }
+
+    // Verify the session with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      console.log('Admin Bookings API: Token verification failed:', error?.message);
+      return false;
+    }
+
+    // Check if user has admin privileges
+    const isAdmin = user.user_metadata?.isAdmin || false;
+    console.log('Admin Bookings API: User is admin:', isAdmin);
+    return isAdmin;
   } catch (error) {
-    console.log('Admin Bookings API: Token verification failed:', error);
+    console.log('Admin Bookings API: Error checking admin access:', error);
     return false;
   }
 };

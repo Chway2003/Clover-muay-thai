@@ -1,23 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { supabase } from '@/lib/supabaseClient';
 import { DataService } from '@/lib/dataService';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 // Middleware to check admin access
 const checkAdminAccess = async (request: NextRequest) => {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return false;
-  }
-  
-  const token = authHeader.substring(7);
   try {
-    // Verify JWT token and check admin status
-    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+    // Get the authorization header or cookie
+    const authHeader = request.headers.get('authorization');
+    const accessToken = request.cookies.get('sb-access-token')?.value;
     
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    let token = null;
     
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    } else if (accessToken) {
+      token = accessToken;
+    }
+    
+    if (!token) {
+      return false;
+    }
+
+    // Verify the session with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      return false;
+    }
+
     // Check if user has admin privileges
-    return decoded.isAdmin || false;
+    return user.user_metadata?.isAdmin || false;
   } catch (error) {
     return false;
   }

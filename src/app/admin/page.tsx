@@ -82,11 +82,7 @@ export default function AdminDashboard() {
     try {
       setIsLoadingData(true);
       
-      const response = await fetch('/api/admin/classes', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await fetch('/api/admin/classes');
       
       if (response.ok) {
         const data = await response.json();
@@ -115,10 +111,7 @@ export default function AdminDashboard() {
   const handleCancelBooking = async (bookingId: string) => {
     try {
       const response = await fetch(`/api/admin/bookings/${bookingId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        method: 'DELETE'
       });
 
       if (response.ok) {
@@ -148,10 +141,7 @@ export default function AdminDashboard() {
 
     try {
       const response = await fetch(`/api/admin/classes?classId=${classId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        method: 'DELETE'
       });
 
       if (response.ok) {
@@ -181,8 +171,7 @@ export default function AdminDashboard() {
       const response = await fetch('/api/admin/classes', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(newClassForm),
       });

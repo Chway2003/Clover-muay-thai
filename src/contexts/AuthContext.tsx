@@ -39,8 +39,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
     // Get initial session
     const getInitialSession = async () => {
       try {
@@ -48,19 +46,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (error) {
           console.error('Error getting initial session:', error);
-        } else if (session && mounted) {
-          console.log('Initial session found:', session.user?.email);
+        } else if (session) {
           setSession(session);
           setUser(transformSupabaseUser(session.user));
-        } else if (mounted) {
-          console.log('No initial session found');
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error);
       } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
     };
 
@@ -71,14 +64,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         
-        if (!mounted) return;
-        
         if (session) {
-          console.log('Setting session from auth state change:', session.user?.email);
           setSession(session);
           setUser(transformSupabaseUser(session.user));
         } else {
-          console.log('Clearing session from auth state change');
           setSession(null);
           setUser(null);
         }
@@ -88,7 +77,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -107,39 +95,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      // Use Supabase client directly for login to ensure proper session management
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (error) {
-        console.error('Supabase login error:', error);
-        
-        // Handle specific Supabase errors
-        if (error.message.includes('Invalid login credentials')) {
-          throw new Error('Invalid email or password');
-        }
-        
-        if (error.message.includes('Email not confirmed')) {
-          throw new Error('Please check your email and confirm your account before logging in');
-        }
-        
-        throw new Error(error.message || 'Login failed');
-      }
+      const data = await response.json();
 
-      if (!data.user || !data.session) {
-        throw new Error('Login failed - no user or session returned');
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
       }
       
-      console.log('Login successful via Supabase client:', data.user.email);
-      if (data.session.expires_at) {
-        console.log('Session expires at:', new Date(data.session.expires_at * 1000).toLocaleString());
-      }
+      console.log('Login successful, received data:', data);
+      console.log('User object:', data.user);
+      console.log('Session:', data.session ? 'exists' : 'missing');
       
       // The session will be automatically handled by the onAuthStateChange listener
       // No need to manually set user/session here
-      
     } catch (error: any) {
       throw new Error(error.message || 'Login failed');
     }
@@ -147,31 +122,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (email: string, name: string, password: string) => {
     try {
-      // Use Supabase client directly for registration
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name,
-            isAdmin: false
-          }
-        }
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, name, password }),
       });
 
-      if (error) {
-        console.error('Supabase registration error:', error);
-        throw new Error(error.message || 'Registration failed');
-      }
+      const data = await response.json();
 
-      if (!data.user) {
-        throw new Error('Registration failed - no user returned');
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
       }
       
-      console.log('Registration successful:', data.user.email);
+      console.log('Registration successful:', data);
       
       // If email confirmation is required, show a message
-      if (!data.user.email_confirmed_at) {
+      if (!data.user.emailConfirmed) {
         throw new Error('Registration successful! Please check your email to confirm your account before logging in.');
       }
       
@@ -187,17 +155,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      // Use Supabase client directly for logout
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('Supabase logout error:', error);
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.error('Logout API failed, but continuing with local logout');
       }
       
       // The session will be automatically cleared by the onAuthStateChange listener
       console.log('Logout successful');
     } catch (error) {
       console.error('Error during logout:', error);
+      // Even if the API call fails, clear local state
     }
   };
 
