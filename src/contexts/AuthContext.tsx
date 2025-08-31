@@ -155,22 +155,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        console.error('Logout API failed, but continuing with local logout');
+      // Use Supabase client directly for logout
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Supabase logout error:', error);
       }
       
       // The session will be automatically cleared by the onAuthStateChange listener
       console.log('Logout successful');
     } catch (error) {
       console.error('Error during logout:', error);
-      // Even if the API call fails, clear local state
     }
   };
 
