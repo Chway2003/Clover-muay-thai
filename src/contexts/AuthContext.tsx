@@ -133,7 +133,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       console.log('Login successful via Supabase client:', data.user.email);
-      console.log('Session expires at:', new Date(data.session.expires_at * 1000).toLocaleString());
+      if (data.session.expires_at) {
+        console.log('Session expires at:', new Date(data.session.expires_at * 1000).toLocaleString());
+      }
       
       // The session will be automatically handled by the onAuthStateChange listener
       // No need to manually set user/session here
