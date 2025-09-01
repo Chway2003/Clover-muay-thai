@@ -62,7 +62,6 @@ export async function GET(request: NextRequest) {
     
     console.log('Admin API: Timetable count:', timetable.length);
     console.log('Admin API: Bookings count:', bookings.length);
-    console.log('Admin API: Sample booking:', bookings[0]);
     
     // Get upcoming dates (next 30 days)
     const upcomingDates = [];
@@ -122,12 +121,32 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Also include the current timetable structure for admin management
+    const currentTimetable = timetable.map((classItem: any) => ({
+      id: classItem.id,
+      classId: classItem.id,
+      className: classItem.classType,
+      day: classItem.day,
+      date: 'Recurring',
+      time: classItem.time,
+      endTime: classItem.endTime,
+      instructor: classItem.instructor,
+      maxSpots: classItem.maxSpots,
+      currentBookings: 0, // These are recurring classes, not specific dates
+      availableSpots: classItem.maxSpots,
+      isFull: false,
+      bookings: [],
+      isRecurring: true
+    }));
+
     console.log('Admin API: Classes with bookings count:', classesWithBookings.length);
-    console.log('Admin API: Sample class with bookings:', classesWithBookings[0]);
+    console.log('Admin API: Current timetable count:', currentTimetable.length);
     
     // Create response with cache control headers
     const response = NextResponse.json({
-      classes: classesWithBookings,
+      classes: [...classesWithBookings, ...currentTimetable],
+      upcomingClasses: classesWithBookings,
+      currentTimetable: currentTimetable,
       timestamp: new Date().toISOString()
     });
     
