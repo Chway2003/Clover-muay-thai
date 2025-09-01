@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session - this ensures session doesn't vanish on refresh
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -47,8 +47,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error) {
           console.error('Error getting initial session:', error);
         } else if (session) {
+          console.log('Initial session found:', session.user?.email);
           setSession(session);
           setUser(transformSupabaseUser(session.user));
+        } else {
+          console.log('No initial session found');
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error);
@@ -59,9 +62,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     getInitialSession();
 
-    // Listen for auth changes
+    // Listen for auth changes - this handles login/logout events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: string, session: Session | null) => {
         console.log('Auth state changed:', event, session?.user?.email);
         
         if (session) {
@@ -95,26 +98,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      // Use Supabase client directly for login to ensure proper session handling
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+      if (error) {
+        throw new Error(error.message || 'Login failed');
       }
-      
-      console.log('Login successful, received data:', data);
-      console.log('User object:', data.user);
-      console.log('Session:', data.session ? 'exists' : 'missing');
-      
-      // The session will be automatically handled by the onAuthStateChange listener
-      // No need to manually set user/session here
+
+      if (data.user && data.session) {
+        console.log('Login successful via Supabase client');
+        // Session will be automatically handled by onAuthStateChange listener
+      } else {
+        throw new Error('Login failed - no user or session returned');
+      }
     } catch (error: any) {
       throw new Error(error.message || 'Login failed');
     }
@@ -122,31 +121,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (email: string, name: string, password: string) => {
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, name, password }),
+      // Use Supabase client directly for registration
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+            isAdmin: false
+          }
+        }
       });
 
-      const data = await response.json();
+      if (error) {
+        throw new Error(error.message || 'Registration failed');
+      }
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
-      }
-      
-      console.log('Registration successful:', data);
-      
-      // If email confirmation is required, show a message
-      if (!data.user.emailConfirmed) {
-        throw new Error('Registration successful! Please check your email to confirm your account before logging in.');
-      }
-      
-      // If email is already confirmed, automatically log in
-      if (data.session) {
-        // Session will be handled by onAuthStateChange
-        console.log('Auto-login after registration');
+      if (data.user) {
+        console.log('Registration successful:', data.user.email);
+        
+        // If email confirmation is required, show a message
+        if (!data.user.email_confirmed_at) {
+          throw new Error('Registration successful! Please check your email to confirm your account before logging in.');
+        }
+        
+        // If email is already confirmed, automatically log in
+        if (data.session) {
+          console.log('Auto-login after registration');
+          // Session will be handled by onAuthStateChange
+        }
       }
     } catch (error: any) {
       throw new Error(error.message || 'Registration failed');
@@ -155,17 +158,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      console.log('Attempting logout...');
+      
       // Use Supabase client directly for logout
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Supabase logout error:', error);
+        throw new Error('Logout failed: ' + error.message);
       }
       
-      // The session will be automatically cleared by the onAuthStateChange listener
       console.log('Logout successful');
+      // The session will be automatically cleared by the onAuthStateChange listener
     } catch (error) {
       console.error('Error during logout:', error);
+      throw error;
     }
   };
 
@@ -176,21 +183,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Verify token and get fresh user data
-      const response = await fetch('/api/auth/verify', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('User refreshed:', data.user);
-        setUser(data.user);
-      } else {
-        console.log('Token invalid, logging out');
+      // Get fresh user data from Supabase
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.error('Error refreshing user:', error);
         await logout();
+        return;
+      }
+
+      if (user) {
+        console.log('User refreshed:', user.email);
+        setUser(transformSupabaseUser(user));
       }
     } catch (error) {
       console.error('Error refreshing user:', error);

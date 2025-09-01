@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
 import { DataService } from '@/lib/dataService';
 
 // Force dynamic rendering
@@ -8,6 +7,15 @@ export const dynamic = 'force-dynamic';
 // Middleware to check admin access
 const checkAdminAccess = async (request: NextRequest) => {
   try {
+    // Check if Supabase environment variables are available
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.log('Supabase environment variables not available');
+      return false;
+    }
+
+    // Dynamically import Supabase client only when needed
+    const { supabase } = await import('@/lib/supabaseClient');
+    
     // Get the authorization header or cookie
     const authHeader = request.headers.get('authorization');
     const accessToken = request.cookies.get('sb-access-token')?.value;

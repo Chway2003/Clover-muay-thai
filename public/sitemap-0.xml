@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-<url><loc>https://clovermuaythai.com/auth/register</loc><lastmod>2025-08-30T14:03:35.243Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://clovermuaythai.com/booking</loc><lastmod>2025-08-30T14:03:35.244Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://clovermuaythai.com/auth/login</loc><lastmod>2025-08-30T14:03:35.244Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://clovermuaythai.com/trainers</loc><lastmod>2025-08-30T14:03:35.244Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://clovermuaythai.com/contact</loc><lastmod>2025-08-30T14:03:35.244Z</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-<url><loc>https://clovermuaythai.com/about</loc><lastmod>2025-08-30T14:03:35.244Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://clovermuaythai.com/classes</loc><lastmod>2025-08-30T14:03:35.244Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://clovermuaythai.com</loc><lastmod>2025-08-30T14:03:35.244Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://clovermuaythai.com/admin</loc><lastmod>2025-08-30T14:03:35.244Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://clovermuaythai.com/about</loc><lastmod>2025-09-01T11:28:58.233Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://clovermuaythai.com/auth/login</loc><lastmod>2025-09-01T11:28:58.234Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://clovermuaythai.com/booking</loc><lastmod>2025-09-01T11:28:58.234Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://clovermuaythai.com/classes</loc><lastmod>2025-09-01T11:28:58.234Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://clovermuaythai.com/contact</loc><lastmod>2025-09-01T11:28:58.234Z</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+<url><loc>https://clovermuaythai.com/admin</loc><lastmod>2025-09-01T11:28:58.234Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://clovermuaythai.com/auth/register</loc><lastmod>2025-09-01T11:28:58.234Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://clovermuaythai.com/trainers</loc><lastmod>2025-09-01T11:28:58.234Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://clovermuaythai.com</loc><lastmod>2025-09-01T11:28:58.234Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
 </urlset>
