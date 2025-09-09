@@ -154,7 +154,6 @@ export async function POST(request: NextRequest) {
       day: classItem.day,
       time: classItem.time,
       endTime: classItem.endTime,
-      instructor: classItem.instructor,
       date: new Date(date).toISOString(),
       createdAt: new Date().toISOString()
     };

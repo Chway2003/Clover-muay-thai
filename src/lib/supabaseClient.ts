@@ -1,4 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { localAuth } from './localAuth';
 
 let supabase: any = null;
 
@@ -6,6 +7,8 @@ let supabase: any = null;
 if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  console.log('Initializing Supabase client with URL:', supabaseUrl);
   
   supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
     auth: {
@@ -15,15 +18,34 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL && pro
     }
   });
 } else {
-  // Create a mock client for build time
+  console.log('Supabase not configured, using local auth for development');
+  // Use local auth for development when Supabase is not configured
   supabase = {
     auth: {
-      getSession: async () => ({ data: { session: null }, error: null }),
-      getUser: async () => ({ data: { user: null }, error: null }),
-      signInWithPassword: async () => ({ data: null, error: { message: 'Supabase not configured' } }),
-      signUp: async () => ({ data: null, error: { message: 'Supabase not configured' } }),
-      signOut: async () => ({ error: null }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+      getSession: async () => {
+        console.log('Local auth: getSession called');
+        return await localAuth.getSession();
+      },
+      getUser: async () => {
+        console.log('Local auth: getUser called');
+        return await localAuth.getUser();
+      },
+      signInWithPassword: async (credentials: { email: string; password: string }) => {
+        console.log('Local auth: signInWithPassword called');
+        return await localAuth.signInWithPassword(credentials);
+      },
+      signUp: async (credentials: { email: string; password: string; options?: any }) => {
+        console.log('Local auth: signUp called');
+        return await localAuth.signUp(credentials);
+      },
+      signOut: async () => {
+        console.log('Local auth: signOut called');
+        return await localAuth.signOut();
+      },
+      onAuthStateChange: (callback: (event: string, session: any) => void) => {
+        console.log('Local auth: onAuthStateChange called');
+        return localAuth.onAuthStateChange(callback);
+      }
     }
   };
 }

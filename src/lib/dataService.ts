@@ -1,8 +1,14 @@
 import { kv } from '@vercel/kv';
 import fs from 'fs';
 import path from 'path';
+import { SupabaseDataService } from './supabaseDataService';
 
-// Check if we have Redis/KV environment variables
+// Check if we have Supabase environment variables
+const hasSupabaseConfig = () => {
+  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+};
+
+// Check if we have Redis/KV environment variables (fallback)
 const hasKvConfig = () => {
   // Check if we have valid KV config
   const hasKv = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
@@ -157,28 +163,33 @@ export class DataService {
   // Bookings
   static async getBookings() {
     try {
-      if (this.isProduction()) {
+      // Use Supabase if available, otherwise fall back to file system
+      if (hasSupabaseConfig()) {
+        console.log('Using Supabase for bookings');
+        return await SupabaseDataService.getBookings();
+      } else if (this.isProduction() && hasKvConfig()) {
+        // Fallback to KV in production if Supabase not available
         try {
+          console.log('Using KV for bookings in production (Supabase not available)');
           const bookings = await kv.get('bookings');
-          return Array.isArray(bookings) ? bookings : [];
+          const result = Array.isArray(bookings) ? bookings : [];
+          console.log('KV bookings loaded:', { count: result.length });
+          return result;
         } catch (kvError) {
-          console.error('KV error, falling back to file system:', kvError);
-          // Fallback to file system in production if KV fails
-          const tmpPath = '/tmp/bookings.json';
-          if (fs.existsSync(tmpPath)) {
-            const data = fs.readFileSync(tmpPath, 'utf-8');
-            return JSON.parse(data);
-          }
+          console.error('KV error in production:', kvError);
           return [];
         }
       } else {
         // Local file system fallback
         const filePath = this.getFilePath('bookings.json');
         if (!fs.existsSync(filePath)) {
+          console.log('No bookings file found locally, returning empty array');
           return [];
         }
         const data = fs.readFileSync(filePath, 'utf-8');
-        return JSON.parse(data);
+        const result = JSON.parse(data);
+        console.log('Local bookings loaded:', { count: result.length });
+        return result;
       }
     } catch (error) {
       console.error('Error getting bookings:', error);
@@ -188,21 +199,28 @@ export class DataService {
 
   static async saveBookings(bookings: any[]) {
     try {
-      if (this.isProduction()) {
+      // Use Supabase if available, otherwise fall back to file system
+      if (hasSupabaseConfig()) {
+        console.log('Using Supabase for saving bookings');
+        return await SupabaseDataService.saveBookings(bookings);
+      } else if (this.isProduction() && hasKvConfig()) {
+        // Fallback to KV in production if Supabase not available
         try {
+          console.log('Saving bookings to KV in production (Supabase not available)');
           await kv.set('bookings', bookings);
+          console.log('Bookings saved to KV successfully');
+          return true;
         } catch (kvError) {
-          console.error('KV save error, falling back to file system:', kvError);
-          // Fallback to file system in production if KV fails
-          const tmpPath = '/tmp/bookings.json';
-          fs.writeFileSync(tmpPath, JSON.stringify(bookings, null, 2));
+          console.error('KV save error in production:', kvError);
+          return false;
         }
       } else {
         // Local file system fallback
         const filePath = this.getFilePath('bookings.json');
         fs.writeFileSync(filePath, JSON.stringify(bookings, null, 2));
+        console.log('Bookings saved to local file system');
+        return true;
       }
-      return true;
     } catch (error) {
       console.error('Error saving bookings:', error);
       return false;
@@ -211,9 +229,40 @@ export class DataService {
 
   static async addBooking(booking: any) {
     try {
+      console.log('Adding booking:', { id: booking.id, userId: booking.userId, classId: booking.classId });
+      
+      // Use Supabase if available
+      if (hasSupabaseConfig()) {
+        console.log('Using Supabase for adding booking');
+        return await SupabaseDataService.addBooking(booking);
+      }
+      
+      // Fallback to file system approach
       const bookings = await this.getBookings();
+      console.log('Current bookings count before add:', bookings.length);
+      
       bookings.push(booking);
-      await this.saveBookings(bookings);
+      
+      const saveResult = await this.saveBookings(bookings);
+      console.log('Save result:', saveResult);
+      
+      if (!saveResult) {
+        console.error('Failed to save bookings after adding new booking');
+        return false;
+      }
+      
+      // Verify the booking was actually saved
+      const verifyBookings = await this.getBookings();
+      console.log('Bookings count after save:', verifyBookings.length);
+      
+      const bookingExists = verifyBookings.some((b: any) => b.id === booking.id);
+      console.log('Booking exists after save:', bookingExists);
+      
+      if (!bookingExists) {
+        console.error('Booking was not persisted after save operation');
+        return false;
+      }
+      
       return true;
     } catch (error) {
       console.error('Error adding booking:', error);
@@ -236,7 +285,12 @@ export class DataService {
   // Timetable
   static async getTimetable() {
     try {
-      if (this.isProduction()) {
+      // Use Supabase if available, otherwise fall back to file system
+      if (hasSupabaseConfig()) {
+        console.log('Using Supabase for timetable');
+        return await SupabaseDataService.getTimetable();
+      } else if (this.isProduction() && hasKvConfig()) {
+        // Fallback to KV in production if Supabase not available
         try {
           const timetable = await kv.get('timetable');
           return Array.isArray(timetable) ? timetable : [];
@@ -351,7 +405,6 @@ export class DataService {
             time: "18:30",
             endTime: "19:30",
             classType: "Beginner Muay Thai",
-            instructor: "Coach John",
             maxSpots: 8,
             description: "Perfect for beginners. Learn basic techniques, footwork, and conditioning."
           },
@@ -361,7 +414,6 @@ export class DataService {
             time: "19:45",
             endTime: "20:45",
             classType: "Intermediate Training",
-            instructor: "Coach John",
             maxSpots: 8,
             description: "Build on fundamentals with advanced combinations and sparring drills."
           },
@@ -371,7 +423,6 @@ export class DataService {
             time: "18:30",
             endTime: "19:30",
             classType: "Beginner Muay Thai",
-            instructor: "Coach Sarah",
             maxSpots: 8,
             description: "Perfect for beginners. Learn basic techniques, footwork, and conditioning."
           },
@@ -381,7 +432,6 @@ export class DataService {
             time: "19:45",
             endTime: "20:45",
             classType: "Intermediate Training",
-            instructor: "Coach Sarah",
             maxSpots: 8,
             description: "Build on fundamentals with advanced combinations and sparring drills."
           },
@@ -391,7 +441,6 @@ export class DataService {
             time: "18:30",
             endTime: "19:30",
             classType: "Beginner Muay Thai",
-            instructor: "Coach John",
             maxSpots: 8,
             description: "Perfect for beginners. Learn basic techniques, footwork, and conditioning."
           },
@@ -401,7 +450,6 @@ export class DataService {
             time: "19:45",
             endTime: "20:45",
             classType: "Intermediate Training",
-            instructor: "Coach John",
             maxSpots: 8,
             description: "Build on fundamentals with advanced combinations and sparring drills."
           },
@@ -411,7 +459,6 @@ export class DataService {
             time: "18:30",
             endTime: "19:30",
             classType: "Beginner Muay Thai",
-            instructor: "Coach Sarah",
             maxSpots: 8,
             description: "Perfect for beginners. Learn basic techniques, footwork, and conditioning."
           },
@@ -421,7 +468,6 @@ export class DataService {
             time: "19:45",
             endTime: "20:45",
             classType: "Intermediate Training",
-            instructor: "Coach Sarah",
             maxSpots: 8,
             description: "Build on fundamentals with advanced combinations and sparring drills."
           },
@@ -431,7 +477,6 @@ export class DataService {
             time: "18:30",
             endTime: "20:00",
             classType: "Sparring Session",
-            instructor: "Coach John",
             maxSpots: 8,
             description: "Advanced sparring session for intermediate and advanced students."
           }

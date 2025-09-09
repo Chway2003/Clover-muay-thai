@@ -9,8 +9,9 @@ const checkAdminAccess = async (request: NextRequest): Promise<boolean> => {
   try {
     // Check if Supabase environment variables are available
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.log('Supabase environment variables not available');
-      return false;
+      console.log('Supabase environment variables not available, allowing admin access for local development');
+      // For local development without Supabase, allow admin access
+      return true;
     }
 
     // Dynamically import Supabase client only when needed
@@ -44,6 +45,10 @@ const checkAdminAccess = async (request: NextRequest): Promise<boolean> => {
     return user.user_metadata?.isAdmin || false;
   } catch (error) {
     console.error('Admin access check error:', error);
+    // For local development, allow admin access if there's an error
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return true;
+    }
     return false;
   }
 };
@@ -54,14 +59,20 @@ export async function GET(request: NextRequest) {
     const isAdmin = await checkAdminAccess(request);
     
     if (!isAdmin) {
+      console.log('Admin API: Unauthorized access attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('Admin API: Loading data...');
     const timetable = await DataService.getTimetable();
     const bookings = await DataService.getBookings();
     
-    console.log('Admin API: Timetable count:', timetable.length);
-    console.log('Admin API: Bookings count:', bookings.length);
+    console.log('Admin API: Data loaded successfully', {
+      timetableCount: timetable.length,
+      bookingsCount: bookings.length,
+      timetableSample: timetable[0],
+      bookingsSample: bookings[0]
+    });
     
     // Get upcoming dates (next 30 days)
     const upcomingDates = [];
@@ -106,7 +117,6 @@ export async function GET(request: NextRequest) {
           date: date,
           time: classItem.time,
           endTime: classItem.endTime,
-          instructor: classItem.instructor,
           maxSpots: classItem.maxSpots,
           currentBookings: classBookings.length,
           availableSpots: classItem.maxSpots - classBookings.length,
@@ -130,7 +140,6 @@ export async function GET(request: NextRequest) {
       date: 'Recurring',
       time: classItem.time,
       endTime: classItem.endTime,
-      instructor: classItem.instructor,
       maxSpots: classItem.maxSpots,
       currentBookings: 0, // These are recurring classes, not specific dates
       availableSpots: classItem.maxSpots,
@@ -177,9 +186,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { day, time, endTime, classType, instructor, maxSpots, description } = await request.json();
+    const { day, time, endTime, classType, maxSpots, description } = await request.json();
 
-    if (!day || !time || !endTime || !classType || !instructor || !maxSpots) {
+    if (!day || !time || !endTime || !classType || !maxSpots) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -206,7 +215,6 @@ export async function POST(request: NextRequest) {
       time,
       endTime,
       classType,
-      instructor,
       maxSpots: parseInt(maxSpots),
       description: description || ''
     };

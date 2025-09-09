@@ -1,1 +1,54 @@
-[]
+[
+  {
+    "id": "1757451655144",
+    "userId": "local-user-1757451650041",
+    "userName": "User",
+    "classId": "tue-745",
+    "className": "Intermediate Training",
+    "day": "Tuesday",
+    "time": "19:45",
+    "endTime": "20:45",
+    "instructor": "Coach Sarah",
+    "date": "2025-09-09T00:00:00.000Z",
+    "createdAt": "2025-09-09T21:00:55.144Z"
+  },
+  {
+    "id": "1757451658336",
+    "userId": "local-user-1757451650041",
+    "userName": "User",
+    "classId": "wed-630",
+    "className": "Beginner Muay Thai",
+    "day": "Wednesday",
+    "time": "18:30",
+    "endTime": "19:30",
+    "instructor": "Coach John",
+    "date": "2025-09-10T00:00:00.000Z",
+    "createdAt": "2025-09-09T21:00:58.336Z"
+  },
+  {
+    "id": "1757451660090",
+    "userId": "local-user-1757451650041",
+    "userName": "User",
+    "classId": "thu-745",
+    "className": "Intermediate Training",
+    "day": "Thursday",
+    "time": "19:45",
+    "endTime": "20:45",
+    "instructor": "Coach Sarah",
+    "date": "2025-09-11T00:00:00.000Z",
+    "createdAt": "2025-09-09T21:01:00.090Z"
+  },
+  {
+    "id": "1757451661614",
+    "userId": "local-user-1757451650041",
+    "userName": "User",
+    "classId": "fri-630",
+    "className": "Sparring Session",
+    "day": "Friday",
+    "time": "18:30",
+    "endTime": "20:00",
+    "instructor": "Coach John",
+    "date": "2025-09-12T00:00:00.000Z",
+    "createdAt": "2025-09-09T21:01:01.614Z"
+  }
+]

@@ -14,7 +14,6 @@ interface AdminClass {
   date: string;
   time: string;
   endTime: string;
-  instructor: string;
   maxSpots: number;
   currentBookings: number;
   availableSpots: number;
@@ -33,7 +32,6 @@ interface NewClassForm {
   time: string;
   endTime: string;
   classType: string;
-  instructor: string;
   maxSpots: string;
   description: string;
 }
@@ -49,7 +47,6 @@ export default function AdminDashboard() {
     time: '18:30',
     endTime: '19:30',
     classType: '',
-    instructor: '',
     maxSpots: '8',
     description: ''
   });
@@ -184,7 +181,6 @@ export default function AdminDashboard() {
           time: '18:30',
           endTime: '19:30',
           classType: '',
-          instructor: '',
           maxSpots: '8',
           description: ''
         });
@@ -334,17 +330,6 @@ export default function AdminDashboard() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Instructor</label>
-                  <input
-                    type="text"
-                    value={newClassForm.instructor}
-                    onChange={(e) => setNewClassForm({...newClassForm, instructor: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clover-gold"
-                    placeholder="e.g., Coach John"
-                    required
-                  />
-                </div>
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
@@ -385,7 +370,6 @@ export default function AdminDashboard() {
                             <div key={classItem.id} className="text-sm">
                               <div className="font-medium text-gray-700">{classItem.className}</div>
                               <div className="text-gray-500">{classItem.time} - {classItem.endTime}</div>
-                              <div className="text-gray-500">{classItem.instructor}</div>
                             </div>
                           ))}
                         </div>
@@ -433,7 +417,6 @@ export default function AdminDashboard() {
                       <th className="px-4 py-3 font-semibold text-gray-900">Class</th>
                       <th className="px-4 py-3 font-semibold text-gray-900">Day/Date</th>
                       <th className="px-4 py-3 font-semibold text-gray-900">Time</th>
-                      <th className="px-4 py-3 font-semibold text-gray-900">Instructor</th>
                       <th className="px-4 py-3 font-semibold text-gray-900">Spots</th>
                       <th className="px-4 py-3 font-semibold text-gray-900">Bookings</th>
                       <th className="px-4 py-3 font-semibold text-gray-900">Actions</th>
@@ -458,7 +441,6 @@ export default function AdminDashboard() {
                         <td className="px-4 py-4 text-gray-900">
                           {formatTime(classItem.time)} - {formatTime(classItem.endTime)}
                         </td>
-                        <td className="px-4 py-4 text-gray-900">{classItem.instructor}</td>
                         <td className="px-4 py-4">
                           <div className="text-sm">
                             <div className="font-medium text-gray-900">
