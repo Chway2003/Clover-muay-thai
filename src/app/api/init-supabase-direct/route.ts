@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { createServerSupabaseClient } from '@/lib/supabaseServer';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -7,6 +7,9 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     console.log('=== DIRECT SUPABASE INIT START ===');
+    
+    // Create server-side Supabase client
+    const supabase = createServerSupabaseClient();
     
     // Check if we can connect to Supabase
     const { data: testData, error: testError } = await supabase
